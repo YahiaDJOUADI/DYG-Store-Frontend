@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login } from "@/features/userSlice";
@@ -67,10 +69,10 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="relative bg-white p-10 rounded-xl shadow-xl max-w-sm w-full"
+        className="relative bg-[#f2f2f2] p-10 rounded-xl shadow-xl max-w-sm w-full border-2 border-[#ffcb05]" /* Light Gray Background with Yellow Border */
       >
         <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
+          className="absolute top-4 right-4 text-[#1d2731] hover:text-[#ffcb05] text-2xl transition duration-300" /* Dark Gray and Yellow */
           onClick={onClose}
           aria-label="Close modal"
         >
@@ -79,7 +81,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
 
         <h2
           id="login-modal-title"
-          className="text-3xl font-bold text-center text-[#235789] mb-8" /* Medium Blue */
+          className="text-3xl font-bold text-center text-[#1d2731] mb-8" /* Dark Gray */
         >
           Welcome Back!
         </h2>
@@ -87,7 +89,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
         <form onSubmit={handleLogin}>
           {error && (
             <div
-              className="mb-4 p-3 text-center text-sm text-[#ED3926] bg-red-100 border border-red-200 rounded-lg" /* Red */
+              className="mb-4 p-3 text-center text-sm text-[#1d2731] bg-red-100 border border-red-200 rounded-lg" /* Dark Gray */
               role="alert"
             >
               {error}
@@ -104,7 +106,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
             <input
               type="email"
               id="email"
-              className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-[#235789] focus:border-[#235789] border-gray-300" /* Medium Blue */
+              className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731]" /* White and Dark Gray */
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -124,7 +126,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
-                className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-[#235789] focus:border-[#235789] border-gray-300 pr-12" /* Medium Blue */
+                className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] pr-12" /* White and Dark Gray */
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -134,7 +136,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-[#235789]" /* Medium Blue */
+                className="absolute inset-y-0 right-4 flex items-center text-[#1d2731] hover:text-[#ffcb05]" /* Dark Gray and Yellow */
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -150,7 +152,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
-            className="w-full bg-[#235789] text-white py-3 rounded-lg shadow-lg hover:bg-[#0b3c5d] transition duration-300 font-semibold" /* Medium Blue and Dark Blue */
+            className="w-full bg-[#ffcb05] text-[#1d2731] py-3 rounded-lg shadow-lg hover:bg-[#235789] hover:text-[#f2f2f2] transition duration-300 font-semibold" /* Yellow and Dark Blue */
             disabled={loading}
             aria-label="Log In"
           >

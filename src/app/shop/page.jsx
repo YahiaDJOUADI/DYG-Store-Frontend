@@ -7,8 +7,8 @@ import {
   FaTicketAlt,
   FaArrowRight,
   FaChartLine,
-  
   FaUser,
+  FaTimes,
 } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -17,13 +17,13 @@ import Select from "react-select";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [userType, setUserType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [sortOption, setSortOption] = useState("default");
   const router = useRouter();
 
   // Fetch products from the server
@@ -32,8 +32,7 @@ export default function ShopPage() {
       try {
         const response = await axios.get("http://localhost:3001/products");
         setProducts(response.data);
-        setFilteredProducts(response.data);
-        setTotalProducts(response.data.length); // Set total number of products
+        setTotalProducts(response.data.length);
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("Failed to fetch products. Please try again later.");
@@ -49,7 +48,6 @@ export default function ShopPage() {
     const fetchUserTypeAndTotalUsers = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        // If no token, user is a guest
         setUserType(null);
         return;
       }
@@ -58,7 +56,6 @@ export default function ShopPage() {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         const userId = decodedToken.id;
 
-        // Fetch user type
         const userResponse = await axios.get(
           `http://localhost:3001/users/${userId}`,
           {
@@ -67,11 +64,10 @@ export default function ShopPage() {
         );
         setUserType(userResponse.data.type);
 
-        // Fetch total number of users
         const usersResponse = await axios.get("http://localhost:3001/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setTotalUsers(usersResponse.data.length); // Set total number of users
+        setTotalUsers(usersResponse.data.length);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -80,7 +76,7 @@ export default function ShopPage() {
     fetchUserTypeAndTotalUsers();
   }, [router]);
 
-  // Category options for the react-select dropdown
+  // Category options 
   const categoryOptions = [
     { value: "all", label: "All Categories" },
     { value: "Video Games", label: "Video Games" },
@@ -88,46 +84,45 @@ export default function ShopPage() {
     { value: "Subscriptions", label: "Subscriptions" },
   ];
 
-  // Filter products
-  useEffect(() => {
-    const filtered = products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-    setFilteredProducts(filtered);
-  }, [searchQuery, selectedCategory, products]);
+  // Sorting options
+  const sortOptions = [
+    { value: "default", label: "Default" },
+    { value: "price-asc", label: "Price: Low to High" },
+    { value: "price-desc", label: "Price: High to Low" },
+  ];
 
-  // Handle search input change
+  // Handle search input change 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Handle category selection change
+  // Handle category selection change 
   const handleCategoryChange = (selectedOption) => {
     setSelectedCategory(selectedOption.value);
+  };
+
+  // Handle sorting option change 
+  const handleSortChange = (selectedOption) => {
+    setSortOption(selectedOption.value);
   };
 
   // Helper function to get category icon
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Video Games":
-        return <FaGamepad className="text-[#ffcb05]" />;
+        return <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
       case "Gaming Gear":
-        return <FaHeadset className="text-[#ffcb05]" />;
+        return <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
       case "Subscriptions":
-        return <FaTicketAlt className="text-[#ffcb05]" />;
+        return <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
       default:
         return null;
     }
   };
 
-  // Handle "View Details" button click for all users (including guests)
+  // Handle "View Details" button click
   const handleViewDetailsClick = (productId) => {
-    router.push(`/shop/${productId}`); // Redirect to product details page
+    router.push(`/shop/${productId}`);
   };
 
   return (
@@ -151,12 +146,14 @@ export default function ShopPage() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2">
-                  <FaChartLine className="text-xl text-[#ffcb05]" />
+                {/* Products Badge */}
+                <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
+                  <FaChartLine className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
                   <span>{totalProducts} Products</span>
                 </div>
-                <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2">
-                  <FaUser className="text-xl text-[#ffcb05]" />
+                {/* Users Badge */}
+                <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
+                  <FaUser className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
                   <span>{totalUsers} Users</span>
                 </div>
               </div>
@@ -181,12 +178,14 @@ export default function ShopPage() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2]">
-                  <FaGamepad className="text-xl text-[#ffcb05]" />
+                {/* Video Games Badge */}
+                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2] transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
+                  <FaGamepad className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
                   <span>Video Games</span>
                 </div>
-                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2]">
-                  <FaHeadset className="text-xl text-[#ffcb05]" />
+                {/* Gaming Gear Badge */}
+                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2] transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
+                  <FaHeadset className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
                   <span>Gaming Gear</span>
                 </div>
               </div>
@@ -199,36 +198,78 @@ export default function ShopPage() {
       <div className="container mx-auto p-6">
         {/* Search Bar with react-select */}
         <motion.div
-          className="max-w-2xl mx-auto mb-8"
+          className="w-full mb-8"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search for products..."
-              className="w-full px-4 py-2.5 rounded-lg border border-[#0b3c5d] focus:outline-none focus:ring-2 focus:ring-[#ffcb05]"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-            <Select
-              options={categoryOptions}
-              placeholder="Category"
-              className="w-48"
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  border: "1px solid #0b3c5d",
-                  borderRadius: "0.5rem",
-                  boxShadow: "none",
-                  "&:hover": { borderColor: "#0b3c5d" },
-                  height: "44px", // Match the height of the search input
-                }),
-              }}
-              onChange={handleCategoryChange}
-            />
-            <button className="bg-[#ffcb05] text-[#1d2731] px-6 py-2.5 rounded-lg hover:bg-[#0b3c5d] hover:text-[#f2f2f2] transition-all">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            {/* Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for products..."
+                className="w-full px-4 py-2.5 rounded-lg border border-[#0b3c5d] focus:outline-none focus:ring-2 focus:ring-[#ffcb05]"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                aria-label="Search for products"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b3c5d] hover:text-[#ffcb05]"
+                  aria-label="Clear search"
+                >
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <Select
+                options={categoryOptions}
+                placeholder="Category"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    border: "1px solid #0b3c5d",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#0b3c5d" },
+                    height: "44px",
+                  }),
+                }}
+                onChange={handleCategoryChange}
+                aria-label="Filter by category"
+              />
+            </div>
+
+            {/* Sorting Dropdown (display only) */}
+            <div>
+              <Select
+                options={sortOptions}
+                placeholder="Sort by"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    border: "1px solid #0b3c5d",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#0b3c5d" },
+                    height: "44px",
+                  }),
+                }}
+                onChange={handleSortChange}
+                aria-label="Sort by"
+              />
+            </div>
+
+            {/* Search Button */}
+            <button
+              className="w-full bg-[#ffcb05] text-[#1d2731] px-6 py-2.5 rounded-lg hover:bg-[#0b3c5d] hover:text-[#f2f2f2] transition-all"
+              aria-label="Search"
+            >
               Search
             </button>
           </div>
@@ -241,7 +282,7 @@ export default function ShopPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <motion.div
                 key={product._id}
                 className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
@@ -267,29 +308,34 @@ export default function ShopPage() {
                   </div>
                 </div>
                 <div className="p-4 flex flex-col gap-3">
-                  {/* Category Icon and Name */}
-                  <div className="flex items-center gap-2 text-[#0b3c5d]">
+                  {/* Category Badge */}
+                  <div className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
                     {getCategoryIcon(product.category)}
                     <span className="text-sm font-medium">
                       {product.category}
                     </span>
                   </div>
+
                   {/* Product Name */}
                   <h2 className="text-xl font-bold text-[#1d2731] truncate">
                     {product.name}
                   </h2>
+
                   {/* Product Description */}
                   <p className="text-sm text-[#1d2731] line-clamp-2">
                     {product.description}
                   </p>
+
                   {/* Price and Button */}
                   <div className="flex items-center justify-between mt-2">
-                    <p className="text-lg font-bold text-[#ffcb05]">
-                      DZD{product.price}
+                    <p className="text-lg font-bold">
+                      <span className="text-[#0b3c5d]">{product.price}</span>{" "}
+                      <span className="text-[#ffcb05]">DZD</span>
                     </p>
                     <button
                       onClick={() => handleViewDetailsClick(product._id)}
                       className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
+                      aria-label="View product details"
                     >
                       <span>View</span>
                       <FaArrowRight className="text-sm" />

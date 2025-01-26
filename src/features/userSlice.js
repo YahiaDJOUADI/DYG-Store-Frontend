@@ -13,8 +13,8 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     login(state, action) {
-      state.user = action.payload.user; // Assuming payload contains user data
-      state.token = action.payload.token; // Store the token
+      state.user = action.payload.user; 
+      state.token = action.payload.token; 
       state.isAuthenticated = true;
       state.error = null;
       state.loading = false;

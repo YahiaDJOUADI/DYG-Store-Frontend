@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { login } from "@/features/userSlice";
-import axios from "axios";
-import { FaUserCircle, FaEnvelope, FaPhoneAlt, FaLock, FaCalendarAlt, FaMars } from "react-icons/fa";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, PhoneIcon, LockClosedIcon, SparklesIcon, UserGroupIcon, GiftIcon } from "@heroicons/react/24/solid";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import Link from "next/link";
 
 export default function SignUp() {
   const dispatch = useDispatch();
@@ -18,203 +18,337 @@ export default function SignUp() {
     email: "",
     phone: "",
     password: "",
-    birthdate: "",
-    gender: "male",
+    agreeToTerms: false,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/");
+  const validateInputs = () => {
+    const { userName, email, phone, password, agreeToTerms } = formData;
+    if (!userName || !email || !phone || !password) {
+      setError("Please fill in all fields.");
+      return false;
     }
-  }, [router]);
-
-  if (isAuthenticated || localStorage.getItem("token")) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-[#235789] to-[#ffcb05]">
-        <motion.div
-          className="w-full max-w-4xl p-10 bg-white rounded-xl shadow-2xl text-center"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-extrabold text-[#235789]">Access Denied</h2>
-          <p className="text-lg text-[#1d2731] mt-2">You cannot access this page because you are already logged in.</p>
-        </motion.div>
-      </div>
-    );
-  }
+    if (!agreeToTerms) {
+      setError("You must agree to the terms and conditions.");
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+
+    if (!validateInputs()) return;
+
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await axios.post("http://localhost:3001/users", formData);
       const { token, user } = response.data;
 
       localStorage.setItem("token", token);
-      dispatch(login(user));
-
-      setSuccessMessage("User registered successfully!");
-      setErrorMessage("");
-
+      dispatch(login({ user, token }));
       router.push("/");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || "Registration failed. Please try again.");
-      setSuccessMessage("");
+    } catch (err) {
+      setError(
+        err.response?.data?.error || "Registration failed. Please try again."
+      );
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#235789] to-[#ffcb05] flex justify-center items-center py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1d2731] to-[#0d1a26] p-4 sm:p-6">
       <motion.div
-        className="w-full max-w-4xl p-10 bg-white rounded-xl shadow-2xl"
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="flex flex-col sm:flex-row bg-gradient-to-br from-[#ffffff] to-[#f2f2f2] rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden"
       >
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-[#235789] mt-4">Level Up Your Game</h2>
-          <p className="text-lg text-[#1d2731] mt-2">Join us and start your gaming journey today!</p>
+        {/* Left Section - Text and Logo */}
+        <div className="w-full sm:w-1/2 bg-gradient-to-br from-[#1d2731] to-[#0d1a26] p-6 sm:p-10 flex flex-col justify-center items-center text-white">
+          {/* Logo */}
+          <img
+            src="/bigLogo.png"
+            alt="Logo"
+            className="w-32 h-32 sm:w-40 sm:h-40 object-contain mb-6 mt-4"
+          />
+          {/* Welcome Text with Icon */}
+          <motion.h1
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-2xl sm:text-4xl font-bold text-center mb-6 flex items-center"
+          >
+            <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 mr-2" />
+            Welcome to Our Gaming World
+          </motion.h1>
+          {/* Description with Icons */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-sm sm:text-lg text-center"
+          >
+            <div className="flex items-center mb-3">
+              <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+              <span>Connect with gamers worldwide</span>
+            </div>
+            <div className="flex items-center mb-3">
+              <GiftIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+              <span>Explore exclusive deals and rewards</span>
+            </div>
+            <div className="flex items-center">
+              <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+              <span>Level up your gaming experience</span>
+            </div>
+          </motion.div>
         </div>
 
-        {successMessage && (
-          <motion.p
-            className="text-green-500 text-center mb-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+        {/* Right Section - Form */}
+        <div className="w-full sm:w-1/2 p-6 sm:p-10">
+          <motion.h2
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-2xl sm:text-3xl font-bold text-center text-[#1d2731] mb-6 sm:mb-8"
           >
-            {successMessage}
-          </motion.p>
-        )}
-        {errorMessage && (
-          <motion.p
-            className="text-[#ED3926] text-center mb-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            {errorMessage}
-          </motion.p>
-        )}
+            Create Account
+          </motion.h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative">
-              <FaUserCircle className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Username" />
-              <input
-                type="text"
-                name="userName"
-                value={formData.userName}
-                onChange={handleChange}
-                placeholder="Username"
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FaEnvelope className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Email" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FaPhoneAlt className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Phone Number" />
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Phone Number"
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FaLock className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Password" />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FaCalendarAlt className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Birthdate" />
-              <input
-                type="date"
-                name="birthdate"
-                value={formData.birthdate}
-                onChange={handleChange}
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FaMars className="absolute left-3 top-3 text-[#235789] text-2xl" aria-label="Gender" />
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full pl-12 pr-4 py-3 bg-[#f2f2f2] border border-[#235789] rounded-lg text-lg text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#ffcb05] transition-all"
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-4 p-3 text-center text-sm text-[#1d2731] bg-red-100 border border-red-200 rounded-lg"
+                role="alert"
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
+                {error}
+              </motion.div>
+            )}
 
-          <motion.button
-            type="submit"
-            className="w-full py-3 bg-[#235789] text-white rounded-lg font-bold text-xl mt-6 hover:bg-[#0b3c5d] transition-all disabled:opacity-50"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            disabled={isSubmitting}
+            {/* Username Field */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="mb-4 sm:mb-6"
+            >
+              <label
+                htmlFor="userName"
+                className="block text-sm font-medium text-[#1d2731] mb-1"
+              >
+                Username
+              </label>
+              <div className="relative">
+                <UserIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1d2731]" />
+                <input
+                  type="text"
+                  id="userName"
+                  name="userName"
+                  className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
+                  value={formData.userName}
+                  onChange={handleChange}
+                  required
+                  aria-label="Username"
+                  disabled={loading}
+                />
+              </div>
+            </motion.div>
+
+            {/* Email Field */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="mb-4 sm:mb-6"
+            >
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-[#1d2731] mb-1"
+              >
+                Email Address
+              </label>
+              <div className="relative">
+                <EnvelopeIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1d2731]" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  aria-label="Email Address"
+                  disabled={loading}
+                />
+              </div>
+            </motion.div>
+
+            {/* Phone Field */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="mb-4 sm:mb-6"
+            >
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-[#1d2731] mb-1"
+              >
+                Phone Number
+              </label>
+              <div className="flex items-center">
+                {/* Country Code Dropdown with Flag */}
+                <div className="relative flex items-center border border-[#235789] rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] bg-white text-[#1d2731] transition-all duration-300">
+                  {/* Algerian Flag Image */}
+                  <img
+                    src="/algeria.png"
+                    alt="Algeria Flag"
+                    className="w-5 h-5 ml-3"
+                  />
+                  <select
+                    id="countryCode"
+                    name="countryCode"
+                    className="pl-2 pr-8 py-2 sm:py-3 appearance-none bg-transparent focus:outline-none"
+                    defaultValue="+213"
+                  >
+                    <option value="+213">+213</option>
+                  </select>
+                </div>
+                {/* Phone Number Input */}
+                <div className="relative flex-1 ml-3">
+                  <PhoneIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1d2731]" />
+                  <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    aria-label="Phone Number"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Password Field */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="mb-4 sm:mb-6 relative"
+            >
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[#1d2731] mb-1"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1d2731]" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] pr-12 transition-all duration-300"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  aria-label="Password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-4 flex items-center text-[#1d2731] hover:text-[#ffcb05] transition-all duration-300"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Terms and Conditions Checkbox */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="mb-4 sm:mb-6 flex items-center"
+            >
+              <input
+                type="checkbox"
+                id="agreeToTerms"
+                name="agreeToTerms"
+                className="w-4 h-4 text-[#ffcb05] border-[#235789] rounded focus:ring-[#ffcb05]"
+                checked={formData.agreeToTerms}
+                onChange={handleChange}
+                required
+              />
+              <label
+                htmlFor="agreeToTerms"
+                className="ml-2 text-sm text-[#1d2731]"
+              >
+                I agree to the{" "}
+                <Link
+                  href="/terms"
+                  className="text-[#235789] hover:text-[#ffcb05] transition-all duration-300"
+                >
+                  Terms and Conditions
+                </Link>
+              </label>
+            </motion.div>
+
+            {/* Submit Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              className="w-full bg-[#ffcb05] text-[#1d2731] py-2 sm:py-3 rounded-lg shadow-lg hover:bg-[#235789] hover:text-[#f2f2f2] transition-all duration-300 font-semibold"
+              disabled={loading}
+              aria-label="Sign Up"
+            >
+              {loading ? "Signing Up..." : "Sign Up"}
+            </motion.button>
+          </form>
+
+          {/* Login Link */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="text-center mt-4 sm:mt-6"
           >
-            {isSubmitting ? "Signing Up..." : "Sign Up"}
-          </motion.button>
-        </form>
-
-        <div className="text-center mt-6">
-          <p className="text-lg text-[#1d2731]">
-            Already have an account?{" "}
-            <Link href="/login" className="text-[#235789] hover:text-[#ffcb05] transition-all">
-              Log in
-            </Link>
-          </p>
+            <p className="text-sm text-[#1d2731]">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="text-[#235789] hover:text-[#ffcb05] transition-all duration-300"
+              >
+                Log in
+              </Link>
+            </p>
+          </motion.div>
         </div>
       </motion.div>
     </div>

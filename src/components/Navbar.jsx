@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -14,9 +13,9 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { logout, setUser } from "@/features/userSlice";
-import { setCart } from "@/features/cartSlice";
 import LoginModal from "./LoginModal";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -34,9 +33,14 @@ const Navbar = () => {
   const [hasWelcomed, setHasWelcomed] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const cartItemCount = useSelector((state) => state.cart.totalCount);
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
+
+  // Get cart items from Redux store
+  const cartItems = useSelector((state) => state.cart.items);
+
+  // Calculate cart item count
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   // Check if a link is active
   const isActive = (href) => pathname === href;
@@ -78,22 +82,6 @@ const Navbar = () => {
     };
 
     if (token) fetchUserData();
-  }, [token, dispatch]);
-
-  // Fetch cart data when token changes
-  useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/cart", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        dispatch(setCart(response.data));
-      } catch (error) {
-        console.error("Error fetching cart data:", error);
-      }
-    };
-
-    if (token) fetchCart();
   }, [token, dispatch]);
 
   // Update isLoggedIn state when token changes
@@ -153,83 +141,91 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-[#f2f2f2] text-[#1d2731] px-6 py-3 flex items-center justify-between shadow-md sticky top-0 z-50 h-16">
-      {/* Logo as Home Link */}
-      <Link href="/" className="flex items-center flex-shrink-0 group">
-        <img
-          src="/DYG Logo - BigCommerce Store Logo.png"
-          alt="DY Games Logo"
-          className="h-10 w-auto object-contain transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-active:scale-95 group-active:rotate-0"
-        />
-      </Link>
+    <nav className="bg-[#f2f2f2] text-[#1d2731] shadow-md sticky top-0 z-50 h-16">
+      {/* Wrapper for consistent width */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        {/* Logo as Home Link */}
+        <Link href="/" className="flex items-center flex-shrink-0 group">
+          <img
+            src="/DYG Logo - BigCommerce Store Logo.png"
+            alt="DY Games Logo"
+            className="h-10 w-auto object-contain transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-active:scale-95 group-active:rotate-0"
+          />
+        </Link>
 
-      {/* Hamburger Menu Icon (Mobile Only) */}
-      <div className="lg:hidden">
-        <button
-          onClick={toggleMobileMenu}
-          className="text-[#0b3c5d] hover:text-[#ffcb05] focus:outline-none"
-          aria-label="Toggle Menu"
-        >
-          {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-        </button>
-      </div>
+        {/* Hamburger Menu Icon (Mobile Only) */}
+        <div className="lg:hidden">
+          <button
+            onClick={toggleMobileMenu}
+            className="text-[#0b3c5d] hover:text-[#ffcb05] focus:outline-none"
+            aria-label="Toggle Menu"
+          >
+            {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+          </button>
+        </div>
 
-      {/* Desktop Menu */}
-      <div className="hidden lg:flex items-center gap-6 text-base font-semibold ml-auto">
-        <NavLink href="/shop" icon={<FaShoppingCart />} label="Shop" />
-        <NavLink href="/about" icon={<FaInfoCircle />} label="About" />
-        <NavLink href="/contact" icon={<FaEnvelope />} label="Contact" />
+        {/* Desktop Menu */}
+        <div className="hidden lg:flex items-center gap-6 text-base font-semibold ml-auto">
+          <NavLink href="/shop" icon={<FaShoppingCart />} label="Shop" />
+          <NavLink href="/about" icon={<FaInfoCircle />} label="About" />
+          <NavLink href="/contact" icon={<FaEnvelope />} label="Contact" />
 
-        {!isLoggedIn ? (
-          <>
-            <button
-              onClick={openLoginModal}
-              className="px-4 py-2 bg-[#0b3c5d] text-white font-bold rounded-md hover:bg-[#ffcb05] hover:scale-110 hover:rotate-3 hover:shadow-lg transition-all duration-300 transform text-sm"
-              aria-label="Log In"
-            >
-              Log In
-            </button>
-            <NavLink href="/signup" label="Sign Up" isButton />
-          </>
-        ) : (
-          <UserDropdown
+          {!isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <button
+                onClick={openLoginModal}
+                className="px-6 py-2 bg-[#0b3c5d] text-white font-bold rounded-md hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105 transition-all duration-300 transform text-sm shadow-md"
+                aria-label="Log In"
+              >
+                Log In
+              </button>
+              <NavLink
+                href="/signup"
+                label="Sign Up"
+                isButton
+                className="px-6 py-2 bg-[#ffcb05] text-[#0b3c5d] font-bold rounded-md hover:bg-[#0b3c5d] hover:text-white hover:scale-105 transition-all duration-300 transform text-sm shadow-md"
+              />
+            </div>
+          ) : (
+            <UserDropdown
+              email={email}
+              dropdownRef={dropdownRef}
+              isDropdownOpen={isDropdownOpen}
+              setIsDropdownOpen={setIsDropdownOpen}
+              handleLogout={handleLogout}
+            />
+          )}
+
+          <CartLink cartItemCount={cartItemCount} />
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <MobileMenu
+            mobileMenuRef={mobileMenuRef}
+            isLoggedIn={isLoggedIn}
             email={email}
-            dropdownRef={dropdownRef}
-            isDropdownOpen={isDropdownOpen}
-            setIsDropdownOpen={setIsDropdownOpen}
+            openLoginModal={openLoginModal}
+            toggleMobileMenu={toggleMobileMenu}
             handleLogout={handleLogout}
           />
         )}
 
-        <CartLink cartItemCount={cartItemCount} />
+        {/* Login Modal */}
+        {isLoginModalOpen && (
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={closeLoginModal}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        )}
       </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <MobileMenu
-          mobileMenuRef={mobileMenuRef}
-          isLoggedIn={isLoggedIn}
-          email={email}
-          openLoginModal={openLoginModal}
-          toggleMobileMenu={toggleMobileMenu}
-          handleLogout={handleLogout}
-        />
-      )}
-
-      {/* Login Modal */}
-      {isLoginModalOpen && (
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={closeLoginModal}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      )}
     </nav>
   );
 };
 
 // Reusable NavLink Component
-const NavLink = ({ href, icon, label, isButton = false }) => {
+const NavLink = ({ href, icon, label, isButton = false, className, onClick }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
@@ -239,8 +235,9 @@ const NavLink = ({ href, icon, label, isButton = false }) => {
       className={`flex items-center ${
         isActive ? "text-[#ffcb05]" : "text-[#0b3c5d]"
       } hover:text-[#ffcb05] hover:scale-105 transition-all duration-200 ${
-        isButton ? "px-4 py-2 bg-[#0b3c5d] text-white rounded-md text-sm" : ""
+        isButton ? className : ""
       }`}
+      onClick={onClick}
     >
       {icon && <span className="mr-2">{icon}</span>}
       {label}

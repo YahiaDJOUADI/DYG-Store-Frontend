@@ -33,9 +33,10 @@ export default function MyAccount() {
     phone: "",
   });
 
-  const defaultProfilePicture = user?.type === "admin"
-    ? "/cute-angry-diver-gaming-cartoon-vector-icon-illustration-science-technology-icon-isolated-flat_138676-12437.avif"
-    : "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif";
+  const defaultProfilePicture =
+    user?.type === "admin"
+      ? "/cute-angry-diver-gaming-cartoon-vector-icon-illustration-science-technology-icon-isolated-flat_138676-12437.avif"
+      : "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif";
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -133,7 +134,7 @@ export default function MyAccount() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-[#f2f2f2]">
         <FaSpinner className="animate-spin text-4xl text-[#235789]" />
       </div>
     );
@@ -141,7 +142,7 @@ export default function MyAccount() {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-[#f2f2f2]">
         Error: {error}
       </div>
     );
@@ -155,6 +156,7 @@ export default function MyAccount() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Decorative Icons */}
         <motion.div
           className="absolute top-0 left-0 text-[#235789] text-4xl"
           initial={{ x: -50, y: -50 }}
@@ -188,6 +190,7 @@ export default function MyAccount() {
           <FaDice />
         </motion.div>
 
+        {/* Profile Picture */}
         <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#235789] shadow-lg">
           <img
             src={defaultProfilePicture}
@@ -196,21 +199,26 @@ export default function MyAccount() {
           />
         </div>
 
+        {/* User Info */}
         <div className="mt-4 text-center">
           <h2 className="text-2xl font-bold text-[#1d2731]">{user?.userName}</h2>
           <p className="text-sm text-[#1d2731]">{user?.email}</p>
         </div>
       </motion.div>
 
+      {/* Personal Information Section */}
       <motion.div
         className="w-full max-w-4xl bg-white rounded-xl shadow-lg mt-6 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <h3 className="text-xl font-semibold text-[#1d2731] mb-6">Personal Information</h3>
+        <h3 className="text-xl font-semibold text-[#1d2731] mb-6">
+          Personal Information
+        </h3>
 
         <div className="flex flex-col space-y-4">
+          {/* Username Field */}
           <div className="flex justify-between items-center p-4 bg-[#f2f2f2] rounded-lg">
             <div className="flex items-center space-x-4">
               <FaUserCircle className="text-[#235789] text-2xl" />
@@ -235,6 +243,7 @@ export default function MyAccount() {
             </div>
           </div>
 
+          {/* Email Field */}
           <div className="flex justify-between items-center p-4 bg-[#f2f2f2] rounded-lg">
             <div className="flex items-center space-x-4">
               <FaEnvelope className="text-[#235789] text-2xl" />
@@ -259,6 +268,7 @@ export default function MyAccount() {
             </div>
           </div>
 
+          {/* Phone Field */}
           <div className="flex justify-between items-center p-4 bg-[#f2f2f2] rounded-lg">
             <div className="flex items-center space-x-4">
               <FaPhoneAlt className="text-[#235789] text-2xl" />
@@ -284,6 +294,7 @@ export default function MyAccount() {
           </div>
         </div>
 
+        {/* Save and Cancel Buttons */}
         {editMode && (
           <div className="flex space-x-4 mt-6">
             <motion.button

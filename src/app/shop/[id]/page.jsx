@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { FaArrowLeft } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaCartPlus,
+  FaShoppingCart,
+  FaGamepad,
+  FaHeadset,
+  FaTicketAlt,
+  FaArrowRight,
+} from "react-icons/fa";
+import { motion } from "framer-motion";
+import axios from "axios";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -15,16 +24,20 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [allProducts, setAllProducts] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
 
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/products/${id}`);
+        const response = await axios.get(
+          `http://localhost:3001/products/${id}`
+        );
         setProduct(response.data);
       } catch (err) {
         console.error(err);
-        setError("Failed to fetch product details.");
+        setError("Failed to fetch product details. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -67,23 +80,36 @@ export default function ProductPage() {
     });
   };
 
-  // Handle adding product to cart
-  const handleAddToCart = async () => {
+  // Handle adding product to cart 
+  const handleAddToCart = () => {
+    setIsAddingToCart(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        "http://localhost:3001/cart/add",
-        {
-          productId: product._id,
-          quantity,
-        },
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          withCredentials: true,
-        }
+      // Get the current cart from localStorage
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      // Check if the product is already in the cart
+      const existingProductIndex = cart.findIndex(
+        (item) => item.productId === product._id
       );
 
-      console.log("Cart after adding product:", response.data);
+      if (existingProductIndex !== -1) {
+        // If the product exists, update its quantity
+        cart[existingProductIndex].quantity += quantity;
+      } else {
+        // If the product doesn't exist, add it to the cart
+        cart.push({
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity,
+        });
+      }
+
+      // Save the updated cart back to localStorage
+      localStorage.setItem("cart", JSON.stringify(cart));
+
+      // Show success message
       showAlert(
         "Added to Cart!",
         `${product.name} has been added to your cart.`,
@@ -94,20 +120,41 @@ export default function ProductPage() {
       console.error("Error adding to cart:", err);
       showAlert(
         "Error",
-        err.message || "Failed to add the product to the cart.",
+        "Failed to add the product to the cart.",
         "error",
         "#ED3926"
       );
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
   // Handle buying the product (redirect to cart page)
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
+    setIsBuyingNow(true);
     try {
-      await handleAddToCart();
+      // Add the product to the cart
+      handleAddToCart();
+      // Redirect to the cart page
       router.push("/cart");
     } catch (err) {
       console.error("Error during buy now:", err);
+    } finally {
+      setIsBuyingNow(false);
+    }
+  };
+
+  // Helper function to get category icon
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case "Video Games":
+        return <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+      case "Gaming Gear":
+        return <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+      case "Subscriptions":
+        return <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+      default:
+        return null;
     }
   };
 
@@ -140,139 +187,223 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-[#f2f2f2] text-[#1d2731]">
-      {/* Back to Shop Button */}
+      {/* Product Details Section */}
       <div className="max-w-6xl mx-auto p-6">
-        <button
-          onClick={() => router.push("/shop")}
-          className="flex items-center gap-2 px-6 py-2 bg-[#235789] text-[#f2f2f2] font-bold rounded-md hover:bg-[#0b3c5d] transition-all duration-300"
-        >
-          <FaArrowLeft /> Back to Shop
-        </button>
-      </div>
+        {/* Product Card */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#0b3c5d] relative">
+          {/* Back to Shop Button */}
+          <motion.button
+            onClick={() => router.push("/shop")}
+            className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-[#ffcb05] text-[#1d2731] font-bold rounded-full hover:bg-[#e6b800] transition-all duration-300 shadow-md"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FaArrowLeft className="text-sm" />
+          </motion.button>
 
-      {/* Product Hero Section */}
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Image */}
-          <div className="flex items-center justify-center">
-            <img
-              src={`http://localhost:3001/public/${product.image}`}
-              alt={`Image of ${product.name}`}
-              className="w-full h-auto max-h-[600px] object-contain rounded-lg hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-
-          {/* Product Details */}
-          <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-[#1d2731]">
-              {product.name}
-            </h1>
-            <p className="text-[#1d2731] text-lg">{product.description}</p>
-
-            {/* Price */}
-            <p className="text-3xl text-[#235789] font-bold">
-              DZD{product.price}
-            </p>
-
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-4">
-              <label className="text-[#1d2731] text-lg font-bold">
-                Quantity:
-              </label>
-              <div className="flex items-center border border-[#1d2731] rounded-md">
-                <button
-                  onClick={() => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))}
-                  className="px-4 py-2 bg-[#f2f2f2] hover:bg-[#e0e0e0] transition-all"
-                >
-                  -
-                </button>
-                <span className="px-4 py-2">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="px-4 py-2 bg-[#f2f2f2] hover:bg-[#e0e0e0] transition-all"
-                >
-                  +
-                </button>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
+            {/* Product Image */}
+            <div className="flex items-center justify-center">
+              <motion.img
+                src={`http://localhost:3001/public/${product.image}`}
+                alt={`Image of ${product.name}`}
+                className="w-full h-auto max-h-[500px] object-cover rounded-lg shadow-md"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              />
             </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col gap-4">
-              <button
-                onClick={handleAddToCart}
-                className="px-8 py-3 bg-[#235789] text-[#f2f2f2] font-bold rounded-md hover:bg-[#0b3c5d] transition-all duration-300"
+            {/* Product Details */}
+            <div className="space-y-4">
+              {/* Product Name */}
+              <motion.h1
+                className="text-4xl font-bold text-[#1d2731]"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                Add to Cart
-              </button>
-              <button
-                onClick={handleBuyNow}
-                className="px-8 py-3 bg-[#ffcb05] text-[#1d2731] font-bold rounded-md hover:bg-[#e6b800] transition-all duration-300"
-              >
-                Buy Now
-              </button>
-            </div>
-          </div>
-        </div>
+                {product.name}
+              </motion.h1>
 
-        {/* Why Choose This Product? Section */}
-        <div className="mt-12 bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-[#1d2731] mb-6">
-            Why Choose This Product?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-[#235789]">
-                Premium Quality
-              </h3>
-              <p className="text-[#1d2731]">
-                Our products are crafted with the highest quality materials to ensure durability and satisfaction.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-[#235789]">
-                Customer Satisfaction
-              </h3>
-              <p className="text-[#1d2731]">
-                We prioritize your satisfaction with a 30-day money-back guarantee.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-[#235789]">
-                Reliable Support
-              </h3>
-              <p className="text-[#1d2731]">
-                Our dedicated support team is available 24/7 to assist you with any questions or issues.
-              </p>
+              {/* Category Badge */}
+              <motion.div
+                className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-4 py-2 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                {getCategoryIcon(product.category)}
+                <span className="text-sm font-medium">{product.category}</span>
+              </motion.div>
+
+              {/* Product Description */}
+              <motion.p
+                className="text-[#1d2731] text-lg"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                {product.description}
+              </motion.p>
+
+              {/* Price */}
+              <motion.div
+                className="flex items-center gap-2"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <span className="text-3xl font-bold text-[#0b3c5d]">
+                  {product.price}
+                </span>
+                <span className="text-2xl text-[#ffcb05]">DZD</span>
+              </motion.div>
+
+              {/* Quantity Selector */}
+              <motion.div
+                className="flex items-center gap-4"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              >
+                <label className="text-[#1d2731] text-lg font-bold">
+                  Quantity:
+                </label>
+                <div className="flex items-center border border-[#1d2731] rounded-md">
+                  <button
+                    onClick={() =>
+                      setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
+                    }
+                    className="px-4 py-2 bg-[#f2f2f2] hover:bg-[#e0e0e0] transition-all"
+                  >
+                    -
+                  </button>
+                  <span className="px-4 py-2">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                    className="px-4 py-2 bg-[#f2f2f2] hover:bg-[#e0e0e0] transition-all"
+                  >
+                    +
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Buttons */}
+              <motion.div
+                className="flex gap-4"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.2 }}
+              >
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart}
+                  className="flex items-center gap-2 px-8 py-3 bg-[#235789] text-[#f2f2f2] font-bold rounded-md hover:bg-[#0b3c5d] transition-all duration-300"
+                >
+                  {isAddingToCart ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#f2f2f2]"></div>
+                  ) : (
+                    <>
+                      <FaCartPlus /> Add to Cart
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  disabled={isBuyingNow}
+                  className="flex items-center gap-2 px-8 py-3 bg-[#ffcb05] text-[#1d2731] font-bold rounded-md hover:bg-[#e6b800] transition-all duration-300"
+                >
+                  {isBuyingNow ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1d2731]"></div>
+                  ) : (
+                    <>
+                      <FaShoppingCart /> Buy Now
+                    </>
+                  )}
+                </button>
+              </motion.div>
             </div>
           </div>
         </div>
 
         {/* Related Products */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-[#1d2731] mb-6">
+        <motion.div
+          className="mt-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.4 }}
+        >
+          <h2 className="text-2xl font-bold text-[#1d2731] mb-4">
             Related Products
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
-              <div
+              <motion.div
                 key={relatedProduct._id}
-                className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
+                whileHover={{ scale: 1.03 }}
               >
-                <img
-                  src={`http://localhost:3001/public/${relatedProduct.image}`}
-                  alt={relatedProduct.name}
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-                <h3 className="text-lg font-bold text-[#1d2731] mt-2">
-                  {relatedProduct.name}
-                </h3>
-                <p className="text-[#235789] font-bold">
-                  DZD{relatedProduct.price}
-                </p>
-              </div>
+                <div className="relative">
+                  <img
+                    src={`http://localhost:3001/public/${relatedProduct.image}`}
+                    alt={relatedProduct.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  {/* Stock Availability Badge */}
+                  <div className="absolute top-2 right-2">
+                    {relatedProduct.stock > 0 ? (
+                      <span className="bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
+                        Available
+                      </span>
+                    ) : (
+                      <span className="bg-red-600 text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
+                        Out of Stock
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col gap-3">
+                  {/* Category Badge with Hover Effect */}
+                  <div className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
+                    {getCategoryIcon(relatedProduct.category)}
+                    <span className="text-sm font-medium">
+                      {relatedProduct.category}
+                    </span>
+                  </div>
+
+                  {/* Product Name */}
+                  <h2 className="text-xl font-bold text-[#1d2731] truncate">
+                    {relatedProduct.name}
+                  </h2>
+
+                  {/* Product Description */}
+                  <p className="text-sm text-[#1d2731] line-clamp-2">
+                    {relatedProduct.description}
+                  </p>
+
+                  {/* Price and Button */}
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-lg font-bold">
+                      <span className="text-[#0b3c5d]">
+                        {relatedProduct.price}
+                      </span>{" "}
+                      <span className="text-[#ffcb05]">DZD</span>
+                    </p>
+                    <button
+                      onClick={() => router.push(`/shop/${relatedProduct._id}`)}
+                      className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
+                      aria-label="View product details"
+                    >
+                      <span>View</span>
+                      <FaArrowRight className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

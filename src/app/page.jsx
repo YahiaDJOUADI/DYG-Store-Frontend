@@ -1,30 +1,21 @@
 "use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaGamepad, FaHeadset, FaArrowRight, FaUsers, FaPlay, FaShoppingCart, FaBook, FaTicketAlt } from "react-icons/fa";
+import { FaGamepad, FaHeadset, FaArrowRight, FaUsers, FaBook, FaTicketAlt } from "react-icons/fa";
 import ReactPlayer from "react-player";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import QuizGame from "../components/QuizGame";
 
-// Container Component
-const Container = ({ children, className = "" }) => {
-  return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
-      {children}
-    </div>
-  );
-};
-
 // Helper function to get category icon
 const getCategoryIcon = (category) => {
   switch (category) {
     case "Video Games":
-      return <FaGamepad className="text-[#ffcb05]" />;
+      return <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
     case "Gaming Gear":
-      return <FaHeadset className="text-[#ffcb05]" />;
+      return <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
     case "Subscriptions":
-      return <FaTicketAlt className="text-[#ffcb05]" />;
+      return <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
     default:
       return null;
   }
@@ -120,25 +111,39 @@ export default function HomePage() {
 
       {/* Products Section */}
       <section className="py-16 bg-[#f2f2f2]">
-        <Container>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h2
             className="text-4xl sm:text-5xl font-bold text-center mb-7 text-[#1d2731]"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
             Featured Products
           </motion.h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.2,
+                },
+              },
+            }}
+          >
             {products.slice(0, 3).map((product, index) => (
               <motion.div
                 key={product._id}
                 className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
-                whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
+                whileHover={{ scale: 1.03, transition: { duration: 0.3 } }}
+                variants={{
+                  hidden: { opacity: 0, y: 50 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+                }}
               >
                 <div className="relative">
                   <img
@@ -160,43 +165,49 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="p-4 flex flex-col gap-3">
-                  {/* Category Icon and Name */}
-                  <div className="flex items-center gap-2 text-[#0b3c5d]">
+                  {/* Category Badge */}
+                  <div className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
                     {getCategoryIcon(product.category)}
-                    <span className="text-sm font-medium">
-                      {product.category}
-                    </span>
+                    <span className="text-sm font-medium">{product.category}</span>
                   </div>
+
                   {/* Product Name */}
                   <h2 className="text-xl font-bold text-[#1d2731] truncate">
                     {product.name}
                   </h2>
+
                   {/* Product Description */}
                   <p className="text-sm text-[#1d2731] line-clamp-2">
                     {product.description}
                   </p>
+
                   {/* Price and Button */}
                   <div className="flex items-center justify-between mt-2">
-                    <p className="text-lg font-bold text-[#ffcb05]">
-                      DZD{product.price}
+                    <p className="text-lg font-bold">
+                      <span className="text-[#0b3c5d]">{product.price}</span>{" "}
+                      <span className="text-[#ffcb05]">DZD</span>
                     </p>
                     <Link href={`/shop/${product._id}`}>
-                      <button className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all">
+                      <motion.button
+                        className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
                         <span>View</span>
                         <FaArrowRight className="text-sm" />
-                      </button>
+                      </motion.button>
                     </Link>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
-        </Container>
+          </motion.div>
+        </div>
       </section>
 
       {/* Community Section */}
       <section className="py-14 bg-[#1d2731]">
-        <Container>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h2
             className="text-4xl sm:text-5xl font-bold text-center mb-12 text-[#f2f2f2]"
             initial={{ opacity: 0, y: -50 }}
@@ -229,7 +240,7 @@ export default function HomePage() {
             ].map((item, index) => (
               <motion.div
                 key={index}
-                className="bg-[#235789] p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 text-center"
+                className="bg-[#235789] p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 text-center flex flex-col"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
@@ -238,21 +249,21 @@ export default function HomePage() {
                   {item.icon}
                 </div>
                 <h3 className="text-xl font-bold mb-2 text-[#f2f2f2]">{item.title}</h3>
-                <p className="text-sm text-gray-300 mb-4">{item.description}</p>
+                <p className="text-sm text-gray-300 mb-6 flex-grow">{item.description}</p>
                 <Link href={item.link}>
-                  <button className="bg-[#ffcb05] text-[#1d2731] py-2 px-6 rounded-lg hover:bg-[#f2f2f2] transition-all duration-300">
+                  <button className="w-full bg-[#ffcb05] text-[#1d2731] py-2 px-6 rounded-lg hover:bg-[#0b3c5d] hover:text-[#f2f2f2] transition-all duration-300 font-bold shadow-md">
                     Learn More
                   </button>
                 </Link>
               </motion.div>
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
       {/* Ratings Section */}
       <section className="py-14 bg-[#ffcb05]">
-        <Container>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h2
             className="text-4xl sm:text-5xl font-bold text-center mb-12 text-[#1d2731]"
             initial={{ opacity: 0, y: -50 }}
@@ -262,7 +273,7 @@ export default function HomePage() {
             What Gamers Are Saying
           </motion.h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 name: "Adel Ramdani",
@@ -291,30 +302,26 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: index * 0.2 }}
               >
                 {/* Avatar */}
-                <motion.div
-                  className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-4 border-[#ffcb05]"
-                  whileHover={{ scale: 1.1 }}
-                >
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 overflow-hidden border-2 border-[#ffcb05]">
                   <img
                     src={testimonial.avatar}
                     alt={testimonial.name}
                     className="w-full h-full object-cover"
                   />
-                </motion.div>
+                </div>
                 {/* Name */}
-                <h3 className="text-xl font-bold text-[#f2f2f2]">{testimonial.name}</h3>
+                <h3 className="text-xl font-bold text-[#f2f2f2] mb-2">{testimonial.name}</h3>
                 {/* Star Rating */}
-                <div className="flex justify-center items-center gap-1 my-3">
+                <div className="flex justify-center items-center gap-1 mb-3">
                   {[...Array(5)].map((_, i) => (
-                    <motion.span
+                    <span
                       key={i}
-                      className={`text-2xl ${
+                      className={`text-xl ${
                         i < testimonial.rating ? "text-[#ffcb05]" : "text-gray-500"
                       }`}
-                      whileHover={{ scale: 1.2 }}
                     >
                       ★
-                    </motion.span>
+                    </span>
                   ))}
                 </div>
                 {/* Review */}
@@ -322,7 +329,7 @@ export default function HomePage() {
               </motion.div>
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
       {/* Mini-Game Button */}
