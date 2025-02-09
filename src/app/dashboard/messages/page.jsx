@@ -3,8 +3,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { FaEnvelope, FaCheck, FaTrash, FaSpinner } from "react-icons/fa";
-import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { Tooltip } from "@mui/material"; // For tooltips
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import { Tooltip } from "@mui/material";
+import api from "@/features/api";
 
 const MessageManagement = () => {
   const [messages, setMessages] = useState([]);
@@ -14,10 +19,8 @@ const MessageManagement = () => {
   const fetchMessages = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.get("http://localhost:3001/messages", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMessages(response.data.data);
+      const response = await api().get("/messages", {});
+      setMessages(response.data.data || []); // Ensure messages is always an array
     } catch (error) {
       console.error("Failed to fetch messages:", error);
       toast.error("Failed to fetch messages");
@@ -28,13 +31,8 @@ const MessageManagement = () => {
 
   // Mark a message as read
   const handleMarkAsRead = async (id) => {
-    const token = localStorage.getItem("token");
     try {
-      await axios.patch(
-        `http://localhost:3001/messages/${id}/read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api().patch(`/messages/${id}/read`, {});
       toast.success("Message marked as read");
       fetchMessages();
     } catch (error) {
@@ -45,11 +43,8 @@ const MessageManagement = () => {
 
   // Delete a message
   const handleDeleteMessage = async (id) => {
-    const token = localStorage.getItem("token");
     try {
-      await axios.delete(`http://localhost:3001/messages/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api().delete(`/messages/${id}`);
       toast.success("Message deleted successfully");
       fetchMessages();
     } catch (error) {
@@ -105,7 +100,7 @@ const MessageManagement = () => {
 
   // Initialize React Table
   const table = useReactTable({
-    data: messages,
+    data: messages || [], // Fallback to an empty array
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -118,7 +113,7 @@ const MessageManagement = () => {
   return (
     <div className="bg-[#f2f2f2] p-6 rounded-lg shadow-lg mb-8">
       <h2 className="text-2xl font-bold text-[#1d2731] mb-6 flex items-center">
-        <FaEnvelope className="mr-2 text-[#235789]" /> {/* Medium Blue */}
+        <FaEnvelope className="mr-2 text-[#235789]" />
         Message Management
       </h2>
 
@@ -140,7 +135,10 @@ const MessageManagement = () => {
                         key={header.id}
                         className="px-6 py-3 text-left text-sm font-semibold uppercase"
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -151,12 +149,17 @@ const MessageManagement = () => {
                   <tr
                     key={row.id}
                     className={`${
-                      row.original.read ? "bg-gray-50 opacity-80" : "hover:bg-gray-100"
+                      row.original.read
+                        ? "bg-gray-50 opacity-80"
+                        : "hover:bg-gray-100"
                     } transition-colors`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-6 py-4 text-sm">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </td>
                     ))}
                   </tr>

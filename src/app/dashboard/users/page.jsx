@@ -1,24 +1,39 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { FaUser, FaArrowUp, FaArrowDown, FaTrash, FaUsers, FaUserShield } from "react-icons/fa";
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
-import Swal from "sweetalert2"; // For confirmation dialogs
+import Swal from "sweetalert2";
+import api from "@/features/api";
 
-const UserManagement = ({ userList, fetchUsers }) => {
+const UserManagement = () => {
+  const [userList, setUserList] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [loading, setLoading] = useState(false);
 
+  // Fetch users from the API
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await api().get("/users");
+      setUserList(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   // Update user role (admin/user)
   const updateUserType = async (id, type) => {
-    const token = localStorage.getItem("token");
     try {
-      await axios.patch(
-        `http://localhost:3001/users/${id}/promote`,
-        { type },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api().patch(`/users/${id}/promote`, { type });
       toast.success(`User role updated to ${type}`);
       fetchUsers();
     } catch (error) {
@@ -34,16 +49,13 @@ const UserManagement = ({ userList, fetchUsers }) => {
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#235789", // Medium Blue
-      cancelButtonColor: "#ffcb05", // Bright Yellow
+      confirmButtonColor: "#235789",
+      cancelButtonColor: "#ffcb05",
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const token = localStorage.getItem("token");
         try {
-          await axios.delete(`http://localhost:3001/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await api().delete(`/users/${id}`);
           toast.success("User deleted successfully");
           fetchUsers();
         } catch (error) {
@@ -67,15 +79,6 @@ const UserManagement = ({ userList, fetchUsers }) => {
           <FaUser className="mr-2 text-[#235789]" /> {/* Medium Blue */}
           User Management
         </h2>
-        <select
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="px-4 py-2 border rounded-md text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-[#235789]"
-        >
-          <option value="all">All Users</option>
-          <option value="admin">Admins</option>
-          <option value="user">Regular Users</option>
-        </select>
       </div>
 
       {/* Insights Cards */}
@@ -146,8 +149,8 @@ const UserManagement = ({ userList, fetchUsers }) => {
                         className={`${
                           user.type === "admin"
                             ? "bg-[#f2f2f2] text-[#1d2731] cursor-not-allowed"
-                            : "bg-[#235789] text-[#f2f2f2] hover:bg-[#0b3c5d]"
-                        } px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center`}
+                            : "bg-[#0b3c5d] text-white font-bold rounded-md hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105 transition-all duration-300 transform text-sm shadow-md"
+                        } px-4 py-2 flex items-center`}
                       >
                         <FaArrowUp className="mr-2" /> Make Admin
                       </button>
@@ -159,8 +162,8 @@ const UserManagement = ({ userList, fetchUsers }) => {
                         className={`${
                           user.type === "user"
                             ? "bg-[#f2f2f2] text-[#1d2731] cursor-not-allowed"
-                            : "bg-[#ffcb05] text-[#1d2731] hover:bg-[#e6b800]"
-                        } px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center`}
+                            : "bg-[#ffcb05] text-[#0b3c5d] font-bold rounded-md hover:bg-[#0b3c5d] hover:text-white hover:scale-105 transition-all duration-300 transform text-sm shadow-md"
+                        } px-4 py-2 flex items-center`}
                       >
                         <FaArrowDown className="mr-2" /> Make User
                       </button>

@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import api from "@/features/api";
 
 const Contact = () => {
   const {
@@ -44,12 +45,8 @@ const Contact = () => {
 
   const onSubmit = async (data) => {
     try {
-      console.log("Sending request with data:", data);
-
       // Simulate sending the form data to the backend
-      const response = await axios.post("http://localhost:3001/messages", data);
-
-      console.log("Message sent successfully:", response.data);
+      const response = await api().post("/messages", data);
 
       // Show success toast
       toast.success("Message sent successfully!");
@@ -95,9 +92,7 @@ const Contact = () => {
   ];
 
   // Repeat the icons to make the background denser
-  const repeatedIcons = Array(50)
-    .fill(icons)
-    .flat();
+  const repeatedIcons = Array(50).fill(icons).flat();
 
   return (
     <motion.div
@@ -150,7 +145,8 @@ const Contact = () => {
           </motion.div>
           <h2 className="text-3xl font-bold text-[#0b3c5d]">Contact Us</h2>
           <p className="mt-2 text-[#1d2731]">
-            We’d love to hear from you! Send us a message and we’ll get back to you shortly.
+            We’d love to hear from you! Send us a message and we’ll get back to
+            you shortly.
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -166,7 +162,9 @@ const Contact = () => {
               />
             </div>
             {errors.name && (
-              <p className="text-[#ED3926] text-sm mt-1">{errors.name.message}</p>
+              <p className="text-[#ED3926] text-sm mt-1">
+                {errors.name.message}
+              </p>
             )}
             <div className="flex items-center border border-gray-300 p-3">
               <FaEnvelope className="text-[#235789] mr-2" />
@@ -185,7 +183,9 @@ const Contact = () => {
               />
             </div>
             {errors.email && (
-              <p className="text-[#ED3926] text-sm mt-1">{errors.email.message}</p>
+              <p className="text-[#ED3926] text-sm mt-1">
+                {errors.email.message}
+              </p>
             )}
             <div className="flex items-center border border-gray-300 rounded-b-md p-3">
               <FaComment className="text-[#235789] mr-2" />
@@ -198,7 +198,9 @@ const Contact = () => {
               />
             </div>
             {errors.message && (
-              <p className="text-[#ED3926] text-sm mt-1">{errors.message.message}</p>
+              <p className="text-[#ED3926] text-sm mt-1">
+                {errors.message.message}
+              </p>
             )}
           </div>
 

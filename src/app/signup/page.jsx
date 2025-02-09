@@ -8,6 +8,7 @@ import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, PhoneIcon, LockClosedIco
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
+import api from "@/features/api";
 
 export default function SignUp() {
   const dispatch = useDispatch();
@@ -18,14 +19,14 @@ export default function SignUp() {
     email: "",
     phone: "",
     password: "",
-    agreeToTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const validateInputs = () => {
-    const { userName, email, phone, password, agreeToTerms } = formData;
+    const { userName, email, phone, password } = formData;
     if (!userName || !email || !phone || !password) {
       setError("Please fill in all fields.");
       return false;
@@ -46,11 +47,12 @@ export default function SignUp() {
     setError(null);
 
     try {
-      const response = await axios.post("http://localhost:3001/users", formData);
+      const { userName, email, phone, password } = formData;
+      const response = await api().post("/users", { userName, email, phone, password });
       const { token, user } = response.data;
 
       localStorage.setItem("token", token);
-      dispatch(login({ user, token }));
+      dispatch(login(user));
       router.push("/");
     } catch (err) {
       setError(
@@ -163,6 +165,7 @@ export default function SignUp() {
                   className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
                   value={formData.userName}
                   onChange={handleChange}
+                  placeholder="Enter your username"
                   required
                   aria-label="Username"
                   disabled={loading}
@@ -192,6 +195,7 @@ export default function SignUp() {
                   className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
                   value={formData.email}
                   onChange={handleChange}
+                  placeholder="Enter your email address"
                   required
                   aria-label="Email Address"
                   disabled={loading}
@@ -240,6 +244,7 @@ export default function SignUp() {
                     className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] transition-all duration-300"
                     value={formData.phone}
                     onChange={handleChange}
+                    placeholder="Enter your phone number"
                     required
                     aria-label="Phone Number"
                     disabled={loading}
@@ -270,6 +275,7 @@ export default function SignUp() {
                   className="w-full pl-10 px-4 py-2 sm:py-3 border rounded-lg shadow-sm focus:ring-[#ffcb05] focus:border-[#ffcb05] border-[#235789] bg-white text-[#1d2731] pr-12 transition-all duration-300"
                   value={formData.password}
                   onChange={handleChange}
+                  placeholder="Enter your password"
                   required
                   aria-label="Password"
                   disabled={loading}
@@ -301,8 +307,8 @@ export default function SignUp() {
                 id="agreeToTerms"
                 name="agreeToTerms"
                 className="w-4 h-4 text-[#ffcb05] border-[#235789] rounded focus:ring-[#ffcb05]"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
                 required
               />
               <label

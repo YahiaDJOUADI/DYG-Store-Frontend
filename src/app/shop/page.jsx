@@ -4,33 +4,56 @@ import { motion } from "framer-motion";
 import {
   FaGamepad,
   FaHeadset,
-  FaTicketAlt,
-  FaArrowRight,
-  FaChartLine,
   FaUser,
   FaTimes,
+  FaBox,
+  FaTicketAlt,
 } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Select from "react-select";
+import ProductCard from "../../components/ProductCard";
+import { useSelector } from "react-redux";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
-  const [userType, setUserType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [totalProducts, setTotalProducts] = useState(0);
-  const [totalUsers, setTotalUsers] = useState(0);
   const [sortOption, setSortOption] = useState("default");
   const router = useRouter();
 
-  // Fetch products from the server
+  // Get user data from Redux store
+  const user = useSelector((state) => state.user.user);
+  const userType = user?.type;
+  const userName = user?.userName;
+
+  // Fetch products with filters and sorting
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/products");
+        const params = {};
+
+        // Add search query to params
+        if (searchQuery) {
+          params.name = searchQuery;
+        }
+
+        if (selectedCategory !== "all") {
+          params.category = selectedCategory;
+        }
+
+        if (sortOption !== "default") {
+          const [sortBy, sortDirection] = sortOption.split("-");
+          params.sortBy = sortBy;
+          params.sortDirection = sortDirection === "asc" ? 1 : -1;
+        }
+
+        const response = await axios.get("http://localhost:3001/products", {
+          params,
+        });
         setProducts(response.data);
         setTotalProducts(response.data.length);
       } catch (error) {
@@ -40,43 +63,11 @@ export default function ShopPage() {
         setIsLoading(false);
       }
     };
+
     fetchProducts();
-  }, []);
+  }, [searchQuery, selectedCategory, sortOption]);
 
-  // Fetch user type (admin/user) and total users from the user data
-  useEffect(() => {
-    const fetchUserTypeAndTotalUsers = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setUserType(null);
-        return;
-      }
-
-      try {
-        const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        const userId = decodedToken.id;
-
-        const userResponse = await axios.get(
-          `http://localhost:3001/users/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setUserType(userResponse.data.type);
-
-        const usersResponse = await axios.get("http://localhost:3001/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTotalUsers(usersResponse.data.length);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserTypeAndTotalUsers();
-  }, [router]);
-
-  // Category options 
+  // Category options
   const categoryOptions = [
     { value: "all", label: "All Categories" },
     { value: "Video Games", label: "Video Games" },
@@ -91,38 +82,19 @@ export default function ShopPage() {
     { value: "price-desc", label: "Price: High to Low" },
   ];
 
-  // Handle search input change 
+  // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Handle category selection change 
+  // Handle category selection change
   const handleCategoryChange = (selectedOption) => {
     setSelectedCategory(selectedOption.value);
   };
 
-  // Handle sorting option change 
+  // Handle sorting option change
   const handleSortChange = (selectedOption) => {
     setSortOption(selectedOption.value);
-  };
-
-  // Helper function to get category icon
-  const getCategoryIcon = (category) => {
-    switch (category) {
-      case "Video Games":
-        return <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
-      case "Gaming Gear":
-        return <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
-      case "Subscriptions":
-        return <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
-      default:
-        return null;
-    }
-  };
-
-  // Handle "View Details" button click
-  const handleViewDetailsClick = (productId) => {
-    router.push(`/shop/${productId}`);
   };
 
   return (
@@ -139,7 +111,7 @@ export default function ShopPage() {
             >
               <div>
                 <h1 className="text-2xl font-bold text-[#ffcb05]">
-                  Welcome Back, Admin
+                  Welcome Back, {userName}
                 </h1>
                 <p className="text-sm text-[#f2f2f2]">
                   Manage your store with ease.
@@ -148,13 +120,8 @@ export default function ShopPage() {
               <div className="flex items-center gap-4">
                 {/* Products Badge */}
                 <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
-                  <FaChartLine className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
+                  <FaBox className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
                   <span>{totalProducts} Products</span>
-                </div>
-                {/* Users Badge */}
-                <div className="bg-[#1d2731] p-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
-                  <FaUser className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
-                  <span>{totalUsers} Users</span>
                 </div>
               </div>
             </motion.div>
@@ -164,30 +131,55 @@ export default function ShopPage() {
         <div className="py-8 bg-[#f2f2f2] text-[#1d2731] border-b border-[#ffcb05]">
           <div className="container mx-auto px-6">
             <motion.div
-              className="flex items-center justify-between"
+              className="flex flex-col items-center justify-center gap-6"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div>
-                <h1 className="text-2xl font-bold text-[#0b3c5d]">
-                  Welcome Back, Gamer
+              {/* Welcome Text - Compact and Centered */}
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-[#0b3c5d] mb-2">
+                  Welcome, {userName} {/* Display the user's name */}
                 </h1>
                 <p className="text-sm text-[#1d2731]">
-                  Discover the best gear and games.
+                  Explore the latest in gaming with our curated selection.
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+
+              {/* Badges - Compact and Minimal */}
+              <div className="flex flex-wrap justify-center gap-4">
                 {/* Video Games Badge */}
-                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2] transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
-                  <FaGamepad className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
-                  <span>Video Games</span>
-                </div>
+                <motion.div
+                  className="bg-white p-3 rounded-lg flex items-center gap-2 text-[#0b3c5d] border border-[#0b3c5d] shadow-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                  <FaGamepad className="text-xl text-[#ffcb05]" />
+                  <span className="font-medium">Video Games</span>
+                </motion.div>
+
                 {/* Gaming Gear Badge */}
-                <div className="bg-[#0b3c5d] p-3 rounded-lg flex items-center gap-2 text-[#f2f2f2] transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
-                  <FaHeadset className="text-xl text-[#ffcb05] group-hover:text-[#1d2731]" />
-                  <span>Gaming Gear</span>
-                </div>
+                <motion.div
+                  className="bg-white p-3 rounded-lg flex items-center gap-2 text-[#0b3c5d] border border-[#0b3c5d] shadow-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                  <FaHeadset className="text-xl text-[#ffcb05]" />
+                  <span className="font-medium">Gaming Gear</span>
+                </motion.div>
+
+                {/* Subscriptions Badge */}
+                <motion.div
+                  className="bg-white p-3 rounded-lg flex items-center gap-2 text-[#0b3c5d] border border-[#0b3c5d] shadow-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                >
+                  <FaTicketAlt className="text-xl text-[#ffcb05]" />
+                  <span className="font-medium">Subscriptions</span>
+                </motion.div>
               </div>
             </motion.div>
           </div>
@@ -245,7 +237,7 @@ export default function ShopPage() {
               />
             </div>
 
-            {/* Sorting Dropdown (display only) */}
+            {/* Sorting Dropdown */}
             <div>
               <Select
                 options={sortOptions}
@@ -283,66 +275,7 @@ export default function ShopPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <motion.div
-                key={product._id}
-                className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
-                whileHover={{ scale: 1.03 }}
-              >
-                <div className="relative">
-                  <img
-                    src={`http://localhost:3001/public/${product.image}`}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  {/* Stock Availability Badge */}
-                  <div className="absolute top-2 right-2">
-                    {product.stock > 0 ? (
-                      <span className="bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
-                        Available
-                      </span>
-                    ) : (
-                      <span className="bg-red-600 text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
-                        Out of Stock
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col gap-3">
-                  {/* Category Badge */}
-                  <div className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group">
-                    {getCategoryIcon(product.category)}
-                    <span className="text-sm font-medium">
-                      {product.category}
-                    </span>
-                  </div>
-
-                  {/* Product Name */}
-                  <h2 className="text-xl font-bold text-[#1d2731] truncate">
-                    {product.name}
-                  </h2>
-
-                  {/* Product Description */}
-                  <p className="text-sm text-[#1d2731] line-clamp-2">
-                    {product.description}
-                  </p>
-
-                  {/* Price and Button */}
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-lg font-bold">
-                      <span className="text-[#0b3c5d]">{product.price}</span>{" "}
-                      <span className="text-[#ffcb05]">DZD</span>
-                    </p>
-                    <button
-                      onClick={() => handleViewDetailsClick(product._id)}
-                      className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
-                      aria-label="View product details"
-                    >
-                      <span>View</span>
-                      <FaArrowRight className="text-sm" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}

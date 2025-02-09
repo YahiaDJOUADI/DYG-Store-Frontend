@@ -12,85 +12,42 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
-import { logout, setUser } from "@/features/userSlice";
+
 import LoginModal from "./LoginModal";
 import Swal from "sweetalert2";
-import axios from "axios";
+import api from "@/features/api";
+import { login, logout } from "@/features/userSlice";
+import { setItems } from "@/features/cartSlice";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const pathname = usePathname();
+  
 
   // State management
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [token, setToken] = useState(null);
-  const [hasWelcomed, setHasWelcomed] = useState(false);
-  const [loading, setLoading] = useState(true);
-
   const dropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
+  const cartLength = useSelector((state) => state.cart.products.length);
 
-  // Get cart items from Redux store
-  const cartItems = useSelector((state) => state.cart.items);
+  
+  const { user, isAuthenticated } = useSelector((state) => state.user);
+  const userEmail = user?.email
 
-  // Calculate cart item count
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  // Check if a link is active
-  const isActive = (href) => pathname === href;
-
-  // Fetch token and hasWelcomed from localStorage on component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedHasWelcomed = localStorage.getItem("hasWelcomed") === "true";
-    setToken(storedToken);
-    setHasWelcomed(storedHasWelcomed);
-    setLoading(false);
-  }, []);
+    const token = localStorage.getItem("token");
+    if (token) {
+      api().get("/account").then((response) => {
+        dispatch(login(response.data));
+      });
+    }
+    const items = localStorage.getItem("items");
+    if (items) {
+      dispatch(setItems(JSON.parse(items)));
+    }
 
-  // Handle successful login
-  const handleLoginSuccess = (newToken) => {
-    setToken(newToken);
-    setIsLoggedIn(true);
-    setHasWelcomed(true);
-    localStorage.setItem("hasWelcomed", "true");
-  };
-
-  // Fetch user data when token changes
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/myAccount", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.data?.user) {
-          const { email, username } = response.data.user;
-          setEmail(email);
-          setUsername(username);
-          dispatch(setUser(response.data.user));
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    if (token) fetchUserData();
-  }, [token, dispatch]);
-
-  // Update isLoggedIn state when token changes
-  useEffect(() => {
-    setIsLoggedIn(!!token);
-  }, [token]);
-
-  // Handle clicks outside dropdown and mobile menu
-  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
@@ -122,9 +79,7 @@ const Navbar = () => {
       if (result.isConfirmed) {
         dispatch(logout());
         localStorage.removeItem("token");
-        localStorage.removeItem("hasWelcomed");
-        setIsLoggedIn(false);
-        setHasWelcomed(false);
+        localStorage.removeItem("items")
         router.push("/");
       }
     });
@@ -134,11 +89,6 @@ const Navbar = () => {
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return <div className="text-center py-4">Loading...</div>;
-  }
 
   return (
     <nav className="bg-[#f2f2f2] text-[#1d2731] shadow-md sticky top-0 z-50 h-16">
@@ -170,7 +120,8 @@ const Navbar = () => {
           <NavLink href="/about" icon={<FaInfoCircle />} label="About" />
           <NavLink href="/contact" icon={<FaEnvelope />} label="Contact" />
 
-          {!isLoggedIn ? (
+
+          {!isAuthenticated ? (
             <div className="flex items-center gap-4">
               <button
                 onClick={openLoginModal}
@@ -188,7 +139,7 @@ const Navbar = () => {
             </div>
           ) : (
             <UserDropdown
-              email={email}
+              email={userEmail}
               dropdownRef={dropdownRef}
               isDropdownOpen={isDropdownOpen}
               setIsDropdownOpen={setIsDropdownOpen}
@@ -196,15 +147,15 @@ const Navbar = () => {
             />
           )}
 
-          <CartLink cartItemCount={cartItemCount} />
+          <CartLink cartItemCount={cartLength} />
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <MobileMenu
             mobileMenuRef={mobileMenuRef}
-            isLoggedIn={isLoggedIn}
-            email={email}
+            isAuthenticated={isAuthenticated}
+            email={userEmail}
             openLoginModal={openLoginModal}
             toggleMobileMenu={toggleMobileMenu}
             handleLogout={handleLogout}
@@ -216,7 +167,6 @@ const Navbar = () => {
           <LoginModal
             isOpen={isLoginModalOpen}
             onClose={closeLoginModal}
-            onLoginSuccess={handleLoginSuccess}
           />
         )}
       </div>
@@ -225,7 +175,14 @@ const Navbar = () => {
 };
 
 // Reusable NavLink Component
-const NavLink = ({ href, icon, label, isButton = false, className, onClick }) => {
+const NavLink = ({
+  href,
+  icon,
+  label,
+  isButton = false,
+  className,
+  onClick,
+}) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
@@ -283,7 +240,7 @@ const UserDropdown = ({
         </Link>
         {email?.toLowerCase() === "yahia@gmail.com" && (
           <Link
-            href="/adminDashbord"
+            href="/dashboard"
             className="block px-4 py-2 text-sm hover:bg-[#ffcb05] hover:text-white"
           >
             Admin Dashbord
@@ -318,7 +275,7 @@ const CartLink = ({ cartItemCount }) => (
 // Mobile Menu Component
 const MobileMenu = ({
   mobileMenuRef,
-  isLoggedIn,
+  isAuthenticated,
   email,
   openLoginModal,
   toggleMobileMenu,
@@ -331,7 +288,7 @@ const MobileMenu = ({
     <NavLink href="/shop" label="Shop" onClick={toggleMobileMenu} />
     <NavLink href="/about" label="About" onClick={toggleMobileMenu} />
     <NavLink href="/contact" label="Contact" onClick={toggleMobileMenu} />
-    {!isLoggedIn ? (
+    {!isAuthenticated ? (
       <>
         <button
           onClick={() => {

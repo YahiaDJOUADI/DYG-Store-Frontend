@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Swal from "sweetalert2";
 import {
   FaArrowLeft,
+  FaArrowRight,
   FaCartPlus,
-  FaShoppingCart,
   FaGamepad,
   FaHeadset,
   FaTicketAlt,
-  FaArrowRight,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import axios from "axios";
+import api from "@/features/api";
+import { useDispatch } from "react-redux";
+import { addToCart } from "@/features/cartSlice";
+import { toast } from "sonner";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -22,18 +23,15 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [allProducts, setAllProducts] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const dispatch = useDispatch();
 
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3001/products/${id}`
-        );
+        const response = await api().get(`/products/${id}`);
         setProduct(response.data);
       } catch (err) {
         console.error(err);
@@ -46,113 +44,49 @@ export default function ProductPage() {
     fetchProduct();
   }, [id]);
 
-  // Fetch all products
+  // Fetch related products
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchRelatedProducts = async () => {
+      if (!product) return;
+
       try {
-        const response = await axios.get("http://localhost:3001/products");
-        setAllProducts(response.data);
+        const params = {
+          category: product.category, // Filter by the same category
+          limit: 4, // Limit to 4 related products
+          exclude: product.id, // Exclude the current product
+        };
+
+        const response = await api().get("/products", { params });
+
+        // Filter out the current product from the response (in case the backend doesn't handle `exclude`)
+        const filteredRelatedProducts = response.data.filter(
+          (p) => p.id !== product.id
+        );
+
+        setRelatedProducts(filteredRelatedProducts);
       } catch (err) {
-        console.error("Error fetching all products:", err);
+        console.error("Error fetching related products:", err);
       }
     };
 
-    fetchAllProducts();
-  }, []);
-
-  // Filter related products
-  useEffect(() => {
-    if (product && allProducts.length > 0) {
-      const related = allProducts.filter(
-        (p) => p.category === product.category && p._id !== product._id
-      );
-      setRelatedProducts(related.slice(0, 4));
-    }
-  }, [product, allProducts]);
-
-  // Helper function to show SweetAlert messages
-  const showAlert = (title, text, icon, confirmButtonColor) => {
-    Swal.fire({
-      title,
-      text,
-      icon,
-      confirmButtonColor,
-    });
-  };
-
-  // Handle adding product to cart 
-  const handleAddToCart = () => {
-    setIsAddingToCart(true);
-    try {
-      // Get the current cart from localStorage
-      const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-      // Check if the product is already in the cart
-      const existingProductIndex = cart.findIndex(
-        (item) => item.productId === product._id
-      );
-
-      if (existingProductIndex !== -1) {
-        // If the product exists, update its quantity
-        cart[existingProductIndex].quantity += quantity;
-      } else {
-        // If the product doesn't exist, add it to the cart
-        cart.push({
-          productId: product._id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity,
-        });
-      }
-
-      // Save the updated cart back to localStorage
-      localStorage.setItem("cart", JSON.stringify(cart));
-
-      // Show success message
-      showAlert(
-        "Added to Cart!",
-        `${product.name} has been added to your cart.`,
-        "success",
-        "#235789"
-      );
-    } catch (err) {
-      console.error("Error adding to cart:", err);
-      showAlert(
-        "Error",
-        "Failed to add the product to the cart.",
-        "error",
-        "#ED3926"
-      );
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
-
-  // Handle buying the product (redirect to cart page)
-  const handleBuyNow = () => {
-    setIsBuyingNow(true);
-    try {
-      // Add the product to the cart
-      handleAddToCart();
-      // Redirect to the cart page
-      router.push("/cart");
-    } catch (err) {
-      console.error("Error during buy now:", err);
-    } finally {
-      setIsBuyingNow(false);
-    }
-  };
+    fetchRelatedProducts();
+  }, [product]);
 
   // Helper function to get category icon
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Video Games":
-        return <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+        return (
+          <FaGamepad className="text-[#ffcb05] group-hover:text-[#1d2731]" />
+        );
       case "Gaming Gear":
-        return <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+        return (
+          <FaHeadset className="text-[#ffcb05] group-hover:text-[#1d2731]" />
+        );
       case "Subscriptions":
-        return <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />;
+        return (
+          <FaTicketAlt className="text-[#ffcb05] group-hover:text-[#1d2731]" />
+        );
       default:
         return null;
     }
@@ -185,6 +119,25 @@ export default function ProductPage() {
     );
   }
 
+  const handleAddToCart = () => {
+    if (!isAddingToCart) {
+      setIsAddingToCart(true);
+      dispatch(addToCart({ product, quantity }));
+      toast.success("Product added to cart!");
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!isAddingToCart) {
+      setIsAddingToCart(true);
+      dispatch(addToCart({ product, quantity }));
+      toast.success("Product added to cart!");
+      setIsAddingToCart(false);
+      router.push("/cart");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f2f2f2] text-[#1d2731]">
       {/* Product Details Section */}
@@ -192,22 +145,38 @@ export default function ProductPage() {
         {/* Product Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#0b3c5d] relative">
           {/* Back to Shop Button */}
-          <motion.button
-            onClick={() => router.push("/shop")}
-            className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-[#ffcb05] text-[#1d2731] font-bold rounded-full hover:bg-[#e6b800] transition-all duration-300 shadow-md"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            className="bg-white text-center w-48 rounded-2xl h-14 relative text-black text-xl font-semibold group"
+            type="button"
+            onClick={() => router.back()}
           >
-            <FaArrowLeft className="text-sm" />
-          </motion.button>
+            <div className="bg-[#ffcb05] rounded-xl h-12 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[184px] z-10 duration-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 1024 1024"
+                height="25px"
+                width="25px"
+              >
+                <path
+                  d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
+                  fill="#000000"
+                ></path>
+                <path
+                  d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
+                  fill="#000000"
+                ></path>
+              </svg>
+            </div>
+            <p className="translate-x-2">Go Back</p>
+          </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
             {/* Product Image */}
             <div className="flex items-center justify-center">
               <motion.img
-                src={`http://localhost:3001/public/${product.image}`}
+                src={product.image}
                 alt={`Image of ${product.name}`}
-                className="w-full h-auto max-h-[500px] object-cover rounded-lg shadow-md"
+                className="w-full h-auto max-h-[400px] object-cover rounded-lg shadow-md"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
@@ -226,12 +195,23 @@ export default function ProductPage() {
                 {product.name}
               </motion.h1>
 
+              {/* Price */}
+              <motion.div
+                className="flex items-center gap-2 text-4xl font-bold text-[#0b3c5d] mb-4"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <span>{product.price}</span>
+                <span className="text-2xl text-[#ffcb05]">DZD</span>
+              </motion.div>
+
               {/* Category Badge */}
               <motion.div
                 className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-4 py-2 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
                 {getCategoryIcon(product.category)}
                 <span className="text-sm font-medium">{product.category}</span>
@@ -242,23 +222,10 @@ export default function ProductPage() {
                 className="text-[#1d2731] text-lg"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
               >
                 {product.description}
               </motion.p>
-
-              {/* Price */}
-              <motion.div
-                className="flex items-center gap-2"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.8 }}
-              >
-                <span className="text-3xl font-bold text-[#0b3c5d]">
-                  {product.price}
-                </span>
-                <span className="text-2xl text-[#ffcb05]">DZD</span>
-              </motion.div>
 
               {/* Quantity Selector */}
               <motion.div
@@ -289,7 +256,7 @@ export default function ProductPage() {
                 </div>
               </motion.div>
 
-              {/* Buttons */}
+              {/* Add to Cart and Buy Now Buttons */}
               <motion.div
                 className="flex gap-4"
                 initial={{ opacity: 0, y: -20 }}
@@ -298,11 +265,15 @@ export default function ProductPage() {
               >
                 <button
                   onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className="flex items-center gap-2 px-8 py-3 bg-[#235789] text-[#f2f2f2] font-bold rounded-md hover:bg-[#0b3c5d] transition-all duration-300"
+                  disabled={isAddingToCart || product.stock <= 0}
+                  className={`flex items-center gap-2 px-8 py-3 bg-[#235789] text-white font-bold rounded-md ${
+                    product.stock > 0
+                      ? "hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105"
+                      : "opacity-50 cursor-not-allowed"
+                  } transition-all duration-300 transform shadow-md`}
                 >
                   {isAddingToCart ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#f2f2f2]"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
                   ) : (
                     <>
                       <FaCartPlus /> Add to Cart
@@ -311,14 +282,18 @@ export default function ProductPage() {
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  disabled={isBuyingNow}
-                  className="flex items-center gap-2 px-8 py-3 bg-[#ffcb05] text-[#1d2731] font-bold rounded-md hover:bg-[#e6b800] transition-all duration-300"
+                  disabled={isAddingToCart || product.stock <= 0} // Disable if out of stock
+                  className={`flex items-center gap-2 px-8 py-3 bg-[#ffcb05] text-[#0b3c5d] font-bold rounded-md ${
+                    product.stock > 0
+                      ? "hover:bg-[#235789] hover:text-white hover:scale-105"
+                      : "opacity-50 cursor-not-allowed"
+                  } transition-all duration-300 transform shadow-md`}
                 >
-                  {isBuyingNow ? (
+                  {isAddingToCart ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1d2731]"></div>
                   ) : (
                     <>
-                      <FaShoppingCart /> Buy Now
+                      <FaCartPlus /> Buy Now
                     </>
                   )}
                 </button>
@@ -340,13 +315,13 @@ export default function ProductPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
               <motion.div
-                key={relatedProduct._id}
+                key={relatedProduct.id}
                 className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
                 whileHover={{ scale: 1.03 }}
               >
                 <div className="relative">
                   <img
-                    src={`http://localhost:3001/public/${relatedProduct.image}`}
+                    src={relatedProduct.image}
                     alt={relatedProduct.name}
                     className="w-full h-48 object-cover"
                   />
@@ -391,7 +366,7 @@ export default function ProductPage() {
                       <span className="text-[#ffcb05]">DZD</span>
                     </p>
                     <button
-                      onClick={() => router.push(`/shop/${relatedProduct._id}`)}
+                      onClick={() => router.push(`/shop/${relatedProduct.id}`)}
                       className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
                       aria-label="View product details"
                     >

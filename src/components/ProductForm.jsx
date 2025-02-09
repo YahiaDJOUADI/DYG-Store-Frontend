@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import api from "@/features/api";
 
 export default function ProductForm({ product, onSubmit, onCancel }) {
   const [formData, setFormData] = useState(
@@ -74,7 +75,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
 
     const dataToSend = new FormData();
     for (const key in formData) {
-      if (formData[key] !== null) {
+      if (formData[key] !== null && key !== "id") {
         dataToSend.append(key, formData[key]);
       }
     }
@@ -82,18 +83,14 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
     try {
       const token = localStorage.getItem("token");
       if (product) {
-        await axios.putForm(`http://localhost:3001/products/${product._id}`, dataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await api().putForm(`/products/${product.id}`, dataToSend, 
+         
+        );
         toast.success("Product updated successfully!");
       } else {
-        await axios.postForm("http://localhost:3001/products", dataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await api().postForm("/products", dataToSend, 
+         
+        );
         toast.success("Product added successfully!");
       }
 
@@ -121,15 +118,16 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.8 }}
     >
-      <h2 className="text-3xl font-extrabold text-center text-[#235789] mb-6">
-        <FaGamepad className="inline-block text-[#ffcb05] mr-2" />
+      <h2 className="text-3xl font-extrabold text-center text-[#1d2731] mb-6">
+        <FaGamepad className="inline-block text-[#0b3c5d] mr-2" />
         {product ? "Edit Product" : "Add New Product"}
       </h2>
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Product Name */}
           <div className="space-y-2">
             <label className="flex items-center text-[#1d2731] font-medium">
-              <FaTags className="text-[#235789] mr-2" />
+              <FaTags className="text-[#ffcb05] mr-2" />
               Product Name
             </label>
             <input
@@ -138,21 +136,22 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
               placeholder="Enter product name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
               required
             />
           </div>
 
+          {/* Category */}
           <div className="space-y-2">
             <label className="flex items-center text-[#1d2731] font-medium">
-              <FaClipboardList className="text-[#235789] mr-2" />
+              <FaClipboardList className="text-[#ffcb05] mr-2" />
               Category
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
               required
             >
               <option value="" disabled>Select a category</option>
@@ -162,9 +161,10 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
             </select>
           </div>
 
+          {/* Price */}
           <div className="space-y-2">
             <label className="flex items-center text-[#1d2731] font-medium">
-              <FaDollarSign className="text-[#235789] mr-2" />
+              <FaDollarSign className="text-[#ffcb05] mr-2" />
               Price
             </label>
             <input
@@ -173,14 +173,15 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
               placeholder="Enter price"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
               required
             />
           </div>
 
+          {/* Stock */}
           <div className="space-y-2">
             <label className="flex items-center text-[#1d2731] font-medium">
-              <FaBox className="text-[#235789] mr-2" />
+              <FaBox className="text-[#ffcb05] mr-2" />
               Stock
             </label>
             <input
@@ -189,29 +190,31 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
               placeholder="Enter stock quantity"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
               required
             />
           </div>
 
+          {/* Product Image */}
           <div className="space-y-2">
             <label className="flex items-center text-[#1d2731] font-medium">
-              <FaUpload className="text-[#235789] mr-2" />
+              <FaUpload className="text-[#ffcb05] mr-2" />
               Product Image
             </label>
             <input
               type="file"
               name="image"
               onChange={handleFileChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
               required={!product}
             />
           </div>
         </div>
 
+        {/* Description */}
         <div className="space-y-2">
           <label className="flex items-center text-[#1d2731] font-medium">
-            <FaInfoCircle className="text-[#235789] mr-2" />
+            <FaInfoCircle className="text-[#ffcb05] mr-2" />
             Description
           </label>
           <textarea
@@ -219,14 +222,15 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
             placeholder="Enter product description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789] focus:border-transparent transition-all text-[#1d2731]"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
             rows="4"
             required
           ></textarea>
         </div>
 
+        {/* Submit Button */}
         <motion.button
-          className="w-full py-3 bg-[#235789] text-white rounded-lg font-bold text-xl mt-6 hover:bg-[#0b3c5d] transition-all"
+          className="w-full py-3 bg-[#0b3c5d] text-white rounded-lg font-bold text-xl mt-6 hover:bg-[#ffcb05] hover:text-[#0b3c5d] transition-all"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           type="submit"
@@ -235,12 +239,13 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
           {loading ? (product ? "Updating..." : "Adding...") : (product ? "Update Product" : "Add Product")}
         </motion.button>
 
+        {/* Cancel Button */}
         <button
           type="button"
           onClick={onCancel}
-          className="w-full py-3 bg-[#ED3926] text-white rounded-lg font-bold text-xl mt-4 hover:bg-[#c53022] transition-all"
+          className="w-full py-3 bg-gray-600 text-white rounded-lg font-bold text-xl mt-4 hover:bg-gray-700 transition-all"
         >
-          <FaArrowLeft className="inline-block mr-2" />
+          <FaArrowLeft className="inline-block mr-2 text-[#ffcb05]" />
           Cancel
         </button>
       </form>

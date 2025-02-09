@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "sonner";
 import {
   FaCheckCircle,
@@ -27,25 +26,26 @@ import {
   MenuItem,
 } from "@mui/material";
 import Swal from "sweetalert2";
+import api from "@/features/api";
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null); // For status dropdown menu
-  const [selectedOrderId, setSelectedOrderId] = useState(null); // Track selected order for status update
+  const [anchorEl, setAnchorEl] = useState(null); 
+  const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
   // Fetch orders from the backend
   const fetchOrders = async () => {
-    const token = localStorage.getItem("token");
+    
     setLoading(true);
 
     try {
-      const response = await axios.get("http://localhost:3001/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api().get("/orders", 
+       
+      );
 
-      console.log("API Response:", response.data); // Log the response
-      setOrders(response.data.orders || response.data); // Adjust based on the response structure
+      
+      setOrders(response.data.orders || response.data); 
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       toast.error("Failed to fetch orders. Please try again later.");
@@ -57,16 +57,16 @@ const OrderManagement = () => {
 
   // Handle status update for an order
   const handleStatusUpdate = async (orderId, newStatus) => {
-    const token = localStorage.getItem("token");
+    
 
     try {
-      const response = await axios.patch(
-        `http://localhost:3001/orders/${orderId}/status`,
-        { status: newStatus }, // Send the new status in the request body
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api().patch(
+        `/orders/${orderId}/status`,
+        { status: newStatus }, 
+        
       );
 
-      console.log("Status Update Response:", response.data); // Log the response
+   
       toast.success(`Order status updated to ${newStatus}!`);
 
       // Update the local state to reflect the new status
@@ -79,22 +79,22 @@ const OrderManagement = () => {
       console.error("Error updating order status:", error);
       toast.error("Failed to update order status. Please try again later.");
     } finally {
-      handleStatusMenuClose(); // Close the dropdown menu
+      handleStatusMenuClose(); 
     }
   };
 
   // Handle payment status update for an order
   const handlePaymentStatusUpdate = async (orderId, isPaid) => {
-    const token = localStorage.getItem("token");
+    
 
     try {
-      const response = await axios.patch(
-        `http://localhost:3001/orders/${orderId}/payment-status`,
-        { isPaid }, // Send the new payment status in the request body
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api().patch(
+        `/orders/${orderId}/payment-status`,
+        { isPaid }, 
+        
       );
 
-      console.log("Payment Status Update Response:", response.data); // Log the response
+    
       toast.success(`Payment status updated to ${isPaid ? "Paid" : "Unpaid"}!`);
 
       // Update the local state to reflect the new payment status
@@ -124,12 +124,12 @@ const OrderManagement = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`http://localhost:3001/orders/${orderId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await api().delete(`/orders/${orderId}`, 
+            
+          );
 
           toast.success("Order deleted successfully!");
-          fetchOrders(); // Refresh the orders list
+          fetchOrders(); 
         } catch (error) {
           console.error("Error deleting order:", error);
           toast.error("Failed to delete order. Please try again later.");
@@ -188,7 +188,7 @@ const OrderManagement = () => {
                     <TableCell>{order.name}</TableCell>
                     <TableCell>{order.phone}</TableCell>
                     <TableCell>{order.wilaya}</TableCell>
-                    <TableCell>DZD {order.totalPrice}</TableCell>
+                    <TableCell> {order.totalPrice}DZD</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status}

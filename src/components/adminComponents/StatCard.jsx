@@ -3,13 +3,13 @@ import React from "react";
 
 const StatCard = ({ icon, title, value, bgColor }) => {
   return (
-    <div className={`${bgColor} p-6 rounded-lg shadow-md text-white`}>
-      <div className="flex items-center justify-between">
+    <div className={`${bgColor} p-4 rounded-lg shadow-md text-white hover:shadow-lg transition-shadow duration-300 transform hover:scale-105`}>
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <p className="text-2xl font-bold">{value}</p>
+          <h3 className="text-md font-semibold">{title}</h3>
+          <p className="text-3xl font-bold">{value}</p>
         </div>
-        <div className="text-3xl">{icon}</div>
+        {icon && <div className="text-4xl">{icon}</div>}
       </div>
     </div>
   );
