@@ -34,6 +34,10 @@ const LoginModal = ({ onClose }) => {
       setLoading(false);
     }
   };
+  const SignUp = ()=>{
+    router.push("/signup")
+    onClose()
+  }
 
   return (
     <div
@@ -145,7 +149,7 @@ const LoginModal = ({ onClose }) => {
               <button
                 type="button"
                 className="text-[#235789] hover:underline"
-                onClick={() => router.push("/signup")}
+                onClick={SignUp}
                 disabled={loading}
               >
                 Sign Up

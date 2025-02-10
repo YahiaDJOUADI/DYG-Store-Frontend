@@ -12,13 +12,16 @@ import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const dispatch = useDispatch();
-  const items = useSelector(state => state.cart.products);
-  const totalPrice = useMemo(() => items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0), [items]);
-  const { user, isAuthenticated } = useSelector((state) => state.user); 
+  const items = useSelector((state) => state.cart.products);
+  const totalPrice = useMemo(
+    () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [items]
+  );
+  const { user, isAuthenticated } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     control,
@@ -39,14 +42,14 @@ export default function CartPage() {
   };
 
   const handleRemoveOne = (productId) => {
-    const index = items.findIndex(item => item.product.id === productId);
+    const index = items.findIndex((item) => item.product.id === productId);
     if (index !== -1) {
       dispatch(removeFromCart(index));
     }
   };
 
   const handleRemoveProduct = (productId) => {
-    const index = items.findIndex(item => item.product.id === productId);
+    const index = items.findIndex((item) => item.product.id === productId);
     if (index !== -1) {
       while (items[index].quantity > 1) {
         dispatch(removeFromCart(index));
@@ -60,37 +63,42 @@ export default function CartPage() {
       showAlert("Error", "Your cart is empty.", "error", "#0b3c5d");
       return;
     }
-  
-    if (isNaN(totalPrice) || totalPrice <= 0) {
-      showAlert("Error", "Invalid total price.", "error", "#0b3c5d");
-      return;
-    }
-  
+
+    // Find the selected wilaya object
+    const selectedWilaya = wilayas.find(
+      (wilaya) => wilaya.number === data.wilaya
+    );
+
+    // Format the wilaya value to include both number and name
+    const formattedWilaya = selectedWilaya
+      ? `${selectedWilaya.number} - ${selectedWilaya.name}`
+      : "";
+
     const orderData = {
-      wilaya: data.wilaya,
+      wilaya: formattedWilaya,
       products: items.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
-        price: item.product.price,
+        platform: item.platform, // Include platform in the order data
       })),
-      totalPrice,
       name: data.name,
       phone: data.phone.startsWith("+213") ? data.phone : `+213${data.phone}`,
       address: data.address,
       userId: isAuthenticated && user ? user._id : null,
     };
-  
+
     try {
       const endpoint = isAuthenticated ? "/orders/user" : "/orders/guest";
       const response = await api().post(endpoint, orderData);
-  
+
       if (response.status === 201) {
+        const orderId = response.data.order.id;
         localStorage.removeItem("items");
         dispatch(emptyCart());
-  
-        // Redirect to the Thank You page with order data
-        router.push(`/ThankYouPage?orderData=${encodeURIComponent(JSON.stringify(orderData))}`);
-  
+
+        // Redirect to the Thank You page with order ID
+        router.push(`/ThankYouPage?orderId=${orderId}`);
+
         // Close the checkout modal
         setIsCheckoutModalOpen(false);
       }
@@ -173,6 +181,11 @@ export default function CartPage() {
                   <span className="text-[#0b3c5d]">{item.product.price}</span>{" "}
                   <span className="text-[#ffcb05]">DZD</span> x {item.quantity}
                 </p>
+                {item.product.category === "Video Games" && (
+                  <p className="text-gray-600">
+                    Platform: <span className="text-[#0b3c5d]">{item.platform}</span>
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
@@ -241,7 +254,11 @@ export default function CartPage() {
                 <div className="flex items-center">
                   {/* Flag and Country Code */}
                   <div className="flex items-center bg-gray-100 p-2 border border-gray-300 rounded-l-md">
-                    <img src="/algeria.png" alt="Algeria Flag" className="w-5 h-5 mr-2" />
+                    <img
+                      src="/algeria.png"
+                      alt="Algeria Flag"
+                      className="w-5 h-5 mr-2"
+                    />
                     <span className="text-gray-700">+213</span>
                   </div>
 
@@ -262,7 +279,9 @@ export default function CartPage() {
                   />
                 </div>
                 {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
               <div>

@@ -27,7 +27,7 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
-            Welcome to DY Games
+            Welcome to DYG Store
           </motion.h1>
           <motion.p
             className="mt-4 text-lg text-[#f2f2f2]"
@@ -43,11 +43,7 @@ export default function About() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 1 }}
           >
-            <Link href="#why-choose-us">
-              <button className="px-6 py-3 bg-[#235789] text-[#f2f2f2] font-bold rounded-lg hover:bg-[#ffcb05] hover:text-[#1d2731] hover:scale-110 transition-all duration-300 transform shadow-lg pulse">
-                Why Choose Us?
-              </button>
-            </Link>
+           
           </motion.div>
         </div>
         <motion.div

@@ -98,7 +98,7 @@ export default function HomePage() {
       </div>
 
       {/* Products Section */}
-      <section className="py-16 bg-[#f2f2f2]">
+      <section className="py-14 bg-[#f2f2f2]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h2
             className="text-3xl sm:text-4xl font-bold text-center mb-7 text-[#1d2731]"
@@ -131,7 +131,7 @@ export default function HomePage() {
       </section>
 
       {/* Brands Section */}
-      <section className="py-16 bg-[#1d2731]">
+      <section className="py-14 bg-[#1d2731]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Updated Title for E-Commerce Gaming Store */}
           <motion.div

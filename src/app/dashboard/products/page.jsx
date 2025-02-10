@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-
 import { toast } from "sonner";
 import { FaBox, FaEdit, FaTrash } from "react-icons/fa";
 import {
@@ -8,17 +7,14 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Tooltip,
   TextField,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  CircularProgress,
   IconButton,
   TablePagination,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Tooltip,
 } from "@mui/material";
 import Swal from "sweetalert2";
 import ProductForm from "@/components/ProductForm";
@@ -33,17 +29,18 @@ const ProductManagement = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
+  const [loading, setLoading] = useState(true);
 
   // Fetch products from the API
   const fetchProducts = async () => {
-    const token = localStorage.getItem("token");
     try {
-      const response = await api().get("/products", 
-      );
+      const response = await api().get("/products");
       setProducts(response.data);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       toast.error("Failed to fetch products");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,11 +78,8 @@ const ProductManagement = () => {
 
   // Handle delete product
   const handleDeleteProduct = async (id) => {
-    const token = localStorage.getItem("token");
     try {
-      await api().delete(`/products/${id}`, 
-        
-      );
+      await api().delete(`/products/${id}`);
       toast.success("Product deleted successfully");
       fetchProducts();
     } catch (error) {
@@ -101,7 +95,7 @@ const ProductManagement = () => {
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#235789",
+      confirmButtonColor: "#0b3c5d",
       cancelButtonColor: "#ffcb05",
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
@@ -131,6 +125,7 @@ const ProductManagement = () => {
 
   const handleCancel = () => {
     setIsProductFormOpen(false);
+    fetchProducts(); // Ensure products are refreshed when the form is closed
   };
 
   // Handle pagination
@@ -147,11 +142,17 @@ const ProductManagement = () => {
   const paginatedProducts = filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
-    <div className="bg-[#f2f2f2] p-6 rounded-lg shadow-md relative">
-      <h2 className="text-2xl font-bold text-[#1d2731] mb-6 flex items-center">
-        <FaBox className="mr-2 text-[#235789]" />
-        Product Management
-      </h2>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header Section */}
+      <div className="mb-8 flex items-center space-x-4 bg-white p-6 rounded-2xl shadow-sm">
+        <div className="p-3 bg-[#0b3c5d] rounded-lg text-white">
+          <FaBox className="text-2xl" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+          <p className="text-gray-600">{products.length} total products</p>
+        </div>
+      </div>
 
       {/* Filters and Add Product Button */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -198,95 +199,119 @@ const ProductManagement = () => {
           </Select>
         </FormControl>
         <button
-  type="submit"
-  className="px-4 py-2 bg-[#0b3c5d] text-white rounded-md hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105 transition-all duration-300 transform text-sm shadow-md flex items-center justify-center"
-  onClick={handleAddProduct}
->
-  <FaBox className="mr-2 text-3xl" />
-  Add Product
-</button>
+          type="button"
+          className="px-4 py-2 bg-[#0b3c5d] text-white rounded-md hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105 transition-all duration-300 transform text-sm shadow-md flex items-center justify-center"
+          onClick={handleAddProduct}
+        >
+          <FaBox className="mr-2 text-3xl" />
+          Add Product
+        </button>
       </div>
 
       {/* Product Table */}
-      <Paper className="shadow-md">
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell className="font-bold text-[#235789]">Image</TableCell>
-                <TableCell className="font-bold text-[#235789]">Name</TableCell>
-                <TableCell className="font-bold text-[#235789]">Category</TableCell>
-                <TableCell className="font-bold text-[#235789]">Price</TableCell>
-                <TableCell className="font-bold text-[#235789]">Stock</TableCell>
-                <TableCell className="font-bold text-[#235789]">Description</TableCell>
-                <TableCell className="font-bold text-[#235789]">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  </TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>{product.price}DZD</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {product.description}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Tooltip title="Edit">
-                        <IconButton
-                          onClick={() => handleEditProduct(product)}
-                          style={{ color: "#235789" }}
-                        >
-                          <FaEdit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          onClick={() => handleDeleteConfirmation(product.id)}
-                          style={{ color: "#ffcb05" }}
-                        >
-                          <FaTrash />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[8, 16, 24]}
-          component="div"
-          count={filteredProducts.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Paper>
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <CircularProgress style={{ color: "#0b3c5d" }} />
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Table Header */}
+          <div className="grid grid-cols-6 gap-4 px-6 py-4 bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white font-semibold">
+            <div>Image</div>
+            <div>Name</div>
+            <div>Category</div>
+            <div>Price</div>
+            <div>Stock</div>
+            <div>Actions</div>
+          </div>
 
-      {/* ProductForm Modal Overlay */}
-      {isProductFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#f2f2f2] rounded-lg shadow-lg w-full max-w-2xl overflow-y-auto max-h-[90vh]">
-            <ProductForm
-              product={selectedProduct}
-              onSubmit={handleFormSubmit}
-              onCancel={handleCancel}
-            />
+          {/* Table Body */}
+          <div className="divide-y divide-gray-100">
+            {paginatedProducts.map((product) => (
+              <div key={product.id} className="grid grid-cols-6 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                {/* Image */}
+                <div className="font-medium text-gray-900">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                </div>
+                
+                {/* Name */}
+                <div className="font-medium text-gray-900">{product.name}</div>
+                
+                {/* Category */}
+                <div className="text-gray-600">{product.category}</div>
+                
+                {/* Price */}
+                <div className="font-semibold text-[#0b3c5d]">{product.price} DZD</div>
+                
+                {/* Stock */}
+                <div className="text-gray-600">{product.stock}</div>
+                
+                {/* Actions */}
+                <div className="flex space-x-2">
+                  <Tooltip title="Edit">
+                    <IconButton
+                      onClick={() => handleEditProduct(product)}
+                      className="text-[#235789]"
+                    >
+                      <FaEdit />
+                    </IconButton>
+                  </Tooltip>
+                  
+                  <Tooltip title="Delete">
+                    <IconButton
+                      onClick={() => handleDeleteConfirmation(product.id)}
+                      className="text-red-600"
+                    >
+                      <FaTrash />
+                    </IconButton>
+                  </Tooltip>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
+
+      <TablePagination
+        rowsPerPageOptions={[8, 16, 24]}
+        component="div"
+        count={filteredProducts.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      {/* ProductForm Modal */}
+      <Dialog
+        open={isProductFormOpen}
+        onClose={handleCancel}
+        maxWidth="md"
+        fullWidth
+        TransitionProps={{
+          onEntering: () => setLoading(false),
+          onExiting: () => setLoading(true),
+        }}
+      >
+        <DialogTitle className="bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white py-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              {selectedProduct ? "Edit Product" : "Add Product"}
+            </h2>
+          </div>
+        </DialogTitle>
+
+        <DialogContent className=" space-y-6">
+          <ProductForm
+            product={selectedProduct}
+            onSubmit={handleFormSubmit}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

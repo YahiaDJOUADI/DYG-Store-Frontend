@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import {
@@ -30,7 +30,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { useSelector } from "react-redux";
 import api from "@/features/api";
 
 const Contact = () => {
@@ -39,9 +39,18 @@ const Contact = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm();
 
   const router = useRouter();
+  const { user, isAuthenticated } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setValue("name", user.userName);
+      setValue("email", user.email);
+    }
+  }, [isAuthenticated, setValue, user]);
 
   const onSubmit = async (data) => {
     try {
@@ -205,17 +214,15 @@ const Contact = () => {
           </div>
 
           <div>
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#235789] hover:bg-[#0b3c5d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#235789] transition-all duration-200"
-            >
-              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <FaPaperPlane className="h-5 w-5 text-white" />
-              </span>
-              Send Message
-            </motion.button>
+          <button
+  type="submit"
+  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#235789] hover:bg-[#ffcb05] hover:text-[#1d2731] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#235789] transition-transform transform hover:scale-105 active:scale-95 duration-500"
+>
+  <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+    <FaPaperPlane className="h-5 w-5 text-white group-hover:text-[#1d2731] transition-colors duration-500" />
+  </span>
+  Send Message
+</button>
           </div>
         </form>
       </div>

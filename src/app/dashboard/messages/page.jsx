@@ -1,26 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "sonner";
-import { FaEnvelope, FaCheck, FaTrash, FaSpinner } from "react-icons/fa";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-} from "@tanstack/react-table";
-import { Tooltip } from "@mui/material";
+import { FaEnvelope, FaCheck, FaTrash, FaEye } from "react-icons/fa";
+import { Tooltip, IconButton, CircularProgress, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import api from "@/features/api";
 
 const MessageManagement = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   // Fetch messages from the server
   const fetchMessages = async () => {
-    const token = localStorage.getItem("token");
     try {
-      const response = await api().get("/messages", {});
-      setMessages(response.data.data || []); // Ensure messages is always an array
+      const response = await api().get("/messages");
+      setMessages(response.data);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
       toast.error("Failed to fetch messages");
@@ -32,7 +27,7 @@ const MessageManagement = () => {
   // Mark a message as read
   const handleMarkAsRead = async (id) => {
     try {
-      await api().patch(`/messages/${id}/read`, {});
+      await api().patch(`/messages/${id}`, { read: true });
       toast.success("Message marked as read");
       fetchMessages();
     } catch (error) {
@@ -53,119 +48,91 @@ const MessageManagement = () => {
     }
   };
 
-  // Define columns for the table
-  const columns = [
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: (info) => <span className="text-[#235789]">{info.getValue()}</span>,
-    },
-    {
-      accessorKey: "message",
-      header: "Message",
-      cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex space-x-2">
-          {!row.original.read && (
-            <Tooltip title="Mark as Read">
-              <button
-                onClick={() => handleMarkAsRead(row.original._id)}
-                className="p-2 bg-[#235789] text-white rounded-lg hover:bg-[#0b3c5d] transition-colors"
-              >
-                <FaCheck />
-              </button>
-            </Tooltip>
-          )}
-          <Tooltip title="Delete Message">
-            <button
-              onClick={() => handleDeleteMessage(row.original._id)}
-              className="p-2 bg-[#ffcb05] text-[#1d2731] rounded-lg hover:bg-[#e6b800] transition-colors"
-            >
-              <FaTrash />
-            </button>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
+  // View a message
+  const handleViewMessage = (message) => {
+    setSelectedMessage(message);
+    setShowMessageModal(true);
+  };
 
-  // Initialize React Table
-  const table = useReactTable({
-    data: messages || [], // Fallback to an empty array
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  // Fetch messages on component mount
   useEffect(() => {
     fetchMessages();
   }, []);
 
   return (
-    <div className="bg-[#f2f2f2] p-6 rounded-lg shadow-lg mb-8">
-      <h2 className="text-2xl font-bold text-[#1d2731] mb-6 flex items-center">
-        <FaEnvelope className="mr-2 text-[#235789]" />
-        Message Management
-      </h2>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header Section */}
+      <div className="mb-8 flex items-center space-x-4 bg-white p-6 rounded-2xl shadow-sm">
+        <div className="p-3 bg-[#0b3c5d] rounded-lg text-white">
+          <FaEnvelope className="text-2xl" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Message Management</h1>
+          <p className="text-gray-600">{messages?.length || 0} total messages</p>
+        </div>
+      </div>
 
-      {/* Loading State */}
+      {/* Main Content */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <FaSpinner className="animate-spin text-[#235789] text-4xl" />
+        <div className="flex h-64 items-center justify-center">
+          <CircularProgress style={{ color: "#0b3c5d" }} />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#235789] text-[#f2f2f2]">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-3 text-left text-sm font-semibold uppercase"
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Table Header */}
+          <div className="grid grid-cols-4 gap-4 px-6 py-4 bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white font-semibold">
+            <div>Name</div>
+            <div>Email</div>
+            <div>Message</div>
+            <div>Actions</div>
+          </div>
+
+          {/* Table Body */}
+          <div className="divide-y divide-gray-100">
+            {messages.map((message) => (
+              <div key={message._id} className={`grid grid-cols-4 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${message.read ? "opacity-50" : ""}`}>
+                {/* Name */}
+                <div className="font-medium text-gray-900">{message.name}</div>
+                
+                {/* Email */}
+                <div className="text-gray-600">{message.email}</div>
+                
+                {/* Message */}
+                <div className="text-gray-600">{message.message.length > 50 ? `${message.message.substring(0, 50)}...` : message.message}</div>
+                
+                {/* Actions */}
+                <div className="flex space-x-2">
+                  <Tooltip title="View Message">
+                    <IconButton
+                      onClick={() => handleViewMessage(message)}
+                      className="text-[#0b3c5d] hover:bg-[#0b3c5d]/10"
+                    >
+                      <FaEye />
+                    </IconButton>
+                  </Tooltip>
+                  
+                  <Tooltip title="Mark as Read">
+                    <span>
+                      <IconButton
+                        onClick={() => handleMarkAsRead(message._id)}
+                        className="text-[#235789] hover:bg-[#235789]/10"
+                        disabled={message.read}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`${
-                      row.original.read
-                        ? "bg-gray-50 opacity-80"
-                        : "hover:bg-gray-100"
-                    } transition-colors`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-4 text-sm">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <FaCheck />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  
+                  <Tooltip title="Delete Message">
+                    <IconButton
+                      onClick={() => handleDeleteMessage(message._id)}
+                      className="text-red-600 hover:bg-[#ffcb05]/10"
+                    >
+                      <FaTrash />
+                    </IconButton>
+                  </Tooltip>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Empty State */}
@@ -176,6 +143,44 @@ const MessageManagement = () => {
           )}
         </div>
       )}
+
+      {/* Message Details Modal */}
+      <Dialog open={showMessageModal} onClose={() => setShowMessageModal(false)} maxWidth="sm" fullWidth>
+        <DialogTitle className="bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Message Details</h2>
+          </div>
+        </DialogTitle>
+
+        <DialogContent className="p-6 space-y-6">
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[#0b3c5d]">Name</h3>
+                <p className="text-gray-700">{selectedMessage.name}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#0b3c5d]">Email</h3>
+                <p className="text-gray-700">{selectedMessage.email}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#0b3c5d]">Message</h3>
+                <p className="text-gray-700 whitespace-pre-line">{selectedMessage.message}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Actions */}
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setShowMessageModal(false)}
+              className="px-5 py-2.5 bg-[#0b3c5d] text-white rounded-lg hover:bg-[#0b3c5d]/90 transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

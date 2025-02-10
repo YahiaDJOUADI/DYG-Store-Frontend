@@ -1,107 +1,99 @@
 "use client";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
-import {
-  FaGamepad,
-  FaDollarSign,
-  FaClipboardList,
-  FaTags,
-  FaInfoCircle,
-  FaUpload,
-  FaArrowLeft,
-  FaBox,
-} from "react-icons/fa";
-import axios from "axios";
-import { useRouter } from "next/navigation";
+import { CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, ListItemText, OutlinedInput } from "@mui/material";
+import { useDropzone } from "react-dropzone";
+import { CloudUpload } from "@mui/icons-material";
 import api from "@/features/api";
 
-export default function ProductForm({ product, onSubmit, onCancel }) {
-  const [formData, setFormData] = useState(
-    product || {
-      name: "",
-      category: "",
-      image: null,
-      price: "",
-      stock: "",
-      description: "",
-    }
-  );
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+const platformsOptions = ["PS5", "PS4", "Xbox Series X/S", "PC"];
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+const ProductForm = ({ product, onSubmit }) => {
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm({
+    defaultValues: {
+      name: product?.name || "",
+      category: product?.category || "",
+      image: null,
+      price: product?.price || "",
+      stock: product?.stock || "",
+      description: product?.description || "",
+      brand: product?.brand || "",
+      platforms: product?.platforms || [],
+    }
+  });
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(product?.image || null);
+
+  const onDrop = (acceptedFiles) => {
+    const file = acceptedFiles[0];
     if (file) {
-      setFormData({ ...formData, image: file });
+      setValue("image", file);
+      setPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: "image/*",
+    multiple: false
+  });
 
-    // Validation
-    if (!formData.name || formData.name.length < 3 || formData.name.length > 50) {
+  const onSubmitHandler = async (data) => {
+    if (!Array.isArray(data.platforms)) {
+      data.platforms = [data.platforms];
+    }
+
+    if (!data.name || data.name.length < 3 || data.name.length > 50) {
       toast.error("Product name must be between 3 and 50 characters.");
       return;
     }
-
-    if (!formData.category) {
+    if (!data.category) {
       toast.error("Please select a category.");
       return;
     }
-
-    if (!formData.image && !product) {
+    if (!data.image && !product) {
       toast.error("Please upload an image.");
       return;
     }
-
-    if (!formData.price || formData.price <= 0) {
+    if (!data.price || data.price <= 0) {
       toast.error("Price must be a positive number.");
       return;
     }
-
-    if (!formData.stock || formData.stock < 0) {
+    if (!data.stock || data.stock < 0) {
       toast.error("Stock must be a non-negative number.");
       return;
     }
-
-    if (!formData.description || formData.description.length < 5 || formData.description.length > 800) {
+    if (!data.description || data.description.length < 5 || data.description.length > 800) {
       toast.error("Description must be between 5 and 800 characters.");
+      return;
+    }
+    if (!data.brand) {
+      toast.error("Brand is required.");
       return;
     }
 
     setLoading(true);
 
     const dataToSend = new FormData();
-    for (const key in formData) {
-      if (formData[key] !== null && key !== "id") {
-        dataToSend.append(key, formData[key]);
+    for (const key in data) {
+      if (data[key] !== null && key !== "id") {
+        if (key === "platforms") {
+          data[key].forEach((platform) => dataToSend.append(key, platform));
+        } else {
+          dataToSend.append(key, data[key]);
+        }
       }
     }
 
     try {
-      const token = localStorage.getItem("token");
       if (product) {
-        await api().putForm(`/products/${product.id}`, dataToSend, 
-         
-        );
+        await api().put(`/products/${product.id}`, dataToSend);
         toast.success("Product updated successfully!");
       } else {
-        await api().postForm("/products", dataToSend, 
-         
-        );
+        await api().post("/products", dataToSend);
         toast.success("Product added successfully!");
       }
-
-      setFormData({
-        name: "",
-        category: "",
-        image: null,
-        price: "",
-        stock: "",
-        description: "",
-      });
       onSubmit();
     } catch (error) {
       console.error(error);
@@ -112,143 +104,161 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
   };
 
   return (
-    <motion.div
-      className="w-full p-8 bg-white rounded-lg shadow-lg border border-gray-100"
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.8 }}
-    >
-      <h2 className="text-3xl font-extrabold text-center text-[#1d2731] mb-6">
-        <FaGamepad className="inline-block text-[#0b3c5d] mr-2" />
-        {product ? "Edit Product" : "Add New Product"}
-      </h2>
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Product Name */}
-          <div className="space-y-2">
-            <label className="flex items-center text-[#1d2731] font-medium">
-              <FaTags className="text-[#ffcb05] mr-2" />
-              Product Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter product name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
+    <form className="space-y-4 p-4" onSubmit={handleSubmit(onSubmitHandler)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Product Name */}
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={<span>Product Name</span>}
+              variant="outlined"
+              fullWidth
+              error={!!errors.name}
+              helperText={errors.name ? errors.name.message : ""}
               required
             />
-          </div>
+          )}
+        />
 
-          {/* Category */}
-          <div className="space-y-2">
-            <label className="flex items-center text-[#1d2731] font-medium">
-              <FaClipboardList className="text-[#ffcb05] mr-2" />
-              Category
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
-              required
-            >
-              <option value="" disabled>Select a category</option>
-              <option value="Video Games">Video Games</option>
-              <option value="Gaming Gear">Gaming Gear</option>
-              <option value="Subscriptions">Subscriptions</option>
-            </select>
-          </div>
+        {/* Category */}
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth variant="outlined" error={!!errors.category}>
+              <InputLabel><span>Category</span></InputLabel>
+              <Select {...field} label="Category" required>
+                <MenuItem value="Video Games">Video Games</MenuItem>
+                <MenuItem value="Gaming Gear">Gaming Gear</MenuItem>
+                <MenuItem value="Subscriptions">Subscriptions</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        />
 
-          {/* Price */}
-          <div className="space-y-2">
-            <label className="flex items-center text-[#1d2731] font-medium">
-              <FaDollarSign className="text-[#ffcb05] mr-2" />
-              Price
-            </label>
-            <input
+        {/* Price */}
+        <Controller
+          name="price"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={<span>Price</span>}
               type="number"
-              name="price"
-              placeholder="Enter price"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
+              variant="outlined"
+              fullWidth
+              error={!!errors.price}
+              helperText={errors.price ? errors.price.message : ""}
               required
             />
-          </div>
+          )}
+        />
 
-          {/* Stock */}
-          <div className="space-y-2">
-            <label className="flex items-center text-[#1d2731] font-medium">
-              <FaBox className="text-[#ffcb05] mr-2" />
-              Stock
-            </label>
-            <input
+        {/* Stock */}
+        <Controller
+          name="stock"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={<span>Stock</span>}
               type="number"
-              name="stock"
-              placeholder="Enter stock quantity"
-              value={formData.stock}
-              onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
+              variant="outlined"
+              fullWidth
+              error={!!errors.stock}
+              helperText={errors.stock ? errors.stock.message : ""}
               required
             />
-          </div>
+          )}
+        />
 
-          {/* Product Image */}
-          <div className="space-y-2">
-            <label className="flex items-center text-[#1d2731] font-medium">
-              <FaUpload className="text-[#ffcb05] mr-2" />
-              Product Image
-            </label>
-            <input
-              type="file"
-              name="image"
-              onChange={handleFileChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
-              required={!product}
+        {/* Brand */}
+        <Controller
+          name="brand"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={<span>Brand</span>}
+              variant="outlined"
+              fullWidth
+              error={!!errors.brand}
+              helperText={errors.brand ? errors.brand.message : ""}
+              required
             />
-          </div>
-        </div>
+          )}
+        />
 
-        {/* Description */}
-        <div className="space-y-2">
-          <label className="flex items-center text-[#1d2731] font-medium">
-            <FaInfoCircle className="text-[#ffcb05] mr-2" />
-            Description
-          </label>
-          <textarea
-            name="description"
-            placeholder="Enter product description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b3c5d] focus:border-transparent transition-all text-[#1d2731]"
-            rows="4"
+        {/* Platforms */}
+        <Controller
+          name="platforms"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth variant="outlined" error={!!errors.platforms}>
+              <InputLabel><span>Platforms</span></InputLabel>
+              <Select
+                {...field}
+                multiple
+                input={<OutlinedInput label="Platforms" />}
+                renderValue={(selected) => selected.join(', ')}
+              >
+                {platformsOptions.map((platform) => (
+                  <MenuItem key={platform} value={platform}>
+                    <Checkbox checked={field.value.includes(platform)} />
+                    <ListItemText primary={platform} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
+      </div>
+
+      {/* Modern Drag & Drop File Upload */}
+      <div {...getRootProps()} className="border-2 border-dashed border-gray-400 p-6 rounded-lg text-center cursor-pointer hover:border-gray-600">
+        <input {...getInputProps()} />
+        {preview ? (
+          <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-lg shadow-md" />
+        ) : (
+          <div className="flex flex-col items-center">
+            <CloudUpload className="text-gray-500 text-4xl" />
+            <p className="text-gray-600 mt-2">Drag & drop an image here, or click to select one</p>
+          </div>
+        )}
+      </div>
+
+      {/* Description */}
+      <Controller
+        name="description"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label={<span>Description</span>}
+            multiline
+            rows={4}
+            variant="outlined"
+            fullWidth
+            error={!!errors.description}
+            helperText={errors.description ? errors.description.message : ""}
             required
-          ></textarea>
-        </div>
+          />
+        )}
+      />
 
-        {/* Submit Button */}
-        <motion.button
-          className="w-full py-3 bg-[#0b3c5d] text-white rounded-lg font-bold text-xl mt-6 hover:bg-[#ffcb05] hover:text-[#0b3c5d] transition-all"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? (product ? "Updating..." : "Adding...") : (product ? "Update Product" : "Add Product")}
-        </motion.button>
-
-        {/* Cancel Button */}
-        <button
-          type="button"
-          onClick={onCancel}
-          className="w-full py-3 bg-gray-600 text-white rounded-lg font-bold text-xl mt-4 hover:bg-gray-700 transition-all"
-        >
-          <FaArrowLeft className="inline-block mr-2 text-[#ffcb05]" />
-          Cancel
-        </button>
-      </form>
-    </motion.div>
+      {/* Submit Button */}
+      <button
+        className="w-full py-4 bg-[#0b3c5d] text-white rounded-md hover:bg-[#ffcb05] hover:text-[#0b3c5d] transition-all duration-300"
+        type="submit"
+        disabled={loading}
+      >
+        {loading ? <CircularProgress size={24} style={{ color: "white" }} /> : (product ? "Update Product" : "Add Product")}
+      </button>
+    </form>
   );
-}
+};
+
+export default ProductForm;

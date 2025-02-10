@@ -11,10 +11,19 @@ import {
   FaTicketAlt,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import {
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
 import api from "@/features/api";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/features/cartSlice";
 import { toast } from "sonner";
+
+const platformsOptions = ["PS5", "PS4", "Xbox Series X/S", "PC"];
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -23,6 +32,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [platform, setPlatform] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const dispatch = useDispatch();
@@ -33,6 +43,9 @@ export default function ProductPage() {
       try {
         const response = await api().get(`/products/${id}`);
         setProduct(response.data);
+        if (response.data.category === "Video Games" && response.data.platforms.length > 0) {
+          setPlatform(response.data.platforms[0]);
+        }
       } catch (err) {
         console.error(err);
         setError("Failed to fetch product details. Please try again later.");
@@ -122,7 +135,7 @@ export default function ProductPage() {
   const handleAddToCart = () => {
     if (!isAddingToCart) {
       setIsAddingToCart(true);
-      dispatch(addToCart({ product, quantity }));
+      dispatch(addToCart({ product, quantity, platform }));
       toast.success("Product added to cart!");
       setIsAddingToCart(false);
     }
@@ -131,7 +144,7 @@ export default function ProductPage() {
   const handleBuyNow = () => {
     if (!isAddingToCart) {
       setIsAddingToCart(true);
-      dispatch(addToCart({ product, quantity }));
+      dispatch(addToCart({ product, quantity, platform }));
       toast.success("Product added to cart!");
       setIsAddingToCart(false);
       router.push("/cart");
@@ -206,12 +219,22 @@ export default function ProductPage() {
                 <span className="text-2xl text-[#ffcb05]">DZD</span>
               </motion.div>
 
+              {/* Brand */}
+              <motion.div
+                className="text-lg font-medium text-[#1d2731]"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <span className="font-bold">Brand:</span> {product.brand}
+              </motion.div>
+
               {/* Category Badge */}
               <motion.div
                 className="flex items-center gap-2 bg-[#0b3c5d] text-[#f2f2f2] px-4 py-2 rounded-full w-fit transition-all duration-300 hover:bg-[#ffcb05] hover:text-[#1d2731] cursor-pointer group"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
               >
                 {getCategoryIcon(product.category)}
                 <span className="text-sm font-medium">{product.category}</span>
@@ -222,7 +245,7 @@ export default function ProductPage() {
                 className="text-[#1d2731] text-lg"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.8 }}
+                transition={{ duration: 0.5, delay: 1 }}
               >
                 {product.description}
               </motion.p>
@@ -232,7 +255,7 @@ export default function ProductPage() {
                 className="flex items-center gap-4"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1 }}
+                transition={{ duration: 0.5, delay: 1.2 }}
               >
                 <label className="text-[#1d2731] text-lg font-bold">
                   Quantity:
@@ -256,12 +279,41 @@ export default function ProductPage() {
                 </div>
               </motion.div>
 
+              {/* Platform Selector */}
+              {product.category === "Video Games" && (
+                <motion.div
+                  className="flex items-center gap-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.4 }}
+                >
+                  <label className="text-[#1d2731] text-lg font-bold">
+                    Platform:
+                  </label>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel><span>Platform</span></InputLabel>
+                    <Select
+                      value={platform}
+                      onChange={(e) => setPlatform(e.target.value)}
+                      label="Platform"
+                      required
+                    >
+                      {platformsOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </motion.div>
+              )}
+
               {/* Add to Cart and Buy Now Buttons */}
               <motion.div
                 className="flex gap-4"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1.2 }}
+                transition={{ duration: 0.5, delay: 1.6 }}
               >
                 <button
                   onClick={handleAddToCart}
@@ -307,7 +359,7 @@ export default function ProductPage() {
           className="mt-12"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.4 }}
+          transition={{ duration: 0.5, delay: 1.8 }}
         >
           <h2 className="text-2xl font-bold text-[#1d2731] mb-4">
             Related Products

@@ -9,14 +9,15 @@ export const cartSlice = createSlice({
     initialState,
     reducers: {
         addToCart(state, action) {
-            const { product, quantity } = action.payload;
-            const index = state.products.findIndex(item => item.product.id === product.id);
+            const { product, quantity, platform } = action.payload;
+            const index = state.products.findIndex(item => item.product.id === product.id && item.platform === platform);
             if (index !== -1) {
                 state.products[index].quantity += quantity;
             } else {
                 state.products.push({
                     product,
-                    quantity
+                    quantity,
+                    platform
                 });
             }
             updateLocalStorage(state.products);

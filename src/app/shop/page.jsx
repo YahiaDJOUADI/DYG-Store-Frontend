@@ -77,7 +77,7 @@ export default function ShopPage() {
 
   // Sorting options
   const sortOptions = [
-    { value: "default", label: "Default" },
+    { value: "Sort By", label: "Default" },
     { value: "price-asc", label: "Price: Low to High" },
     { value: "price-desc", label: "Price: High to Low" },
   ];
@@ -139,7 +139,7 @@ export default function ShopPage() {
               {/* Welcome Text - Compact and Centered */}
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-[#0b3c5d] mb-2">
-                  Welcome, {userName} {/* Display the user's name */}
+                  Welcome, {userName}
                 </h1>
                 <p className="text-sm text-[#1d2731]">
                   Explore the latest in gaming with our curated selection.

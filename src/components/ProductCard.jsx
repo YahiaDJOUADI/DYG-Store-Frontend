@@ -74,7 +74,7 @@ export default function ProductCard({ product }) {
         />
         <div className="absolute top-2 right-2 flex items-center gap-2">
           {product.stock > 0 ? (
-            <span className="bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
+            <span className="bg-green-600 text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
               Available
             </span>
           ) : (
@@ -115,7 +115,7 @@ export default function ProductCard({ product }) {
           </p>
           <button
             onClick={() => handleViewDetailsClick(product.id)}
-            className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
+            className=" font-bold flex items-center gap-2 bg-[#ffcb05] hover:bg-[#0b3c5d] text-[#0b3c5d] hover:text-[#f2f2f2] py-2 px-4 rounded-lg transition-all"
             aria-label="View product details"
           >
             <span>BUY</span>
