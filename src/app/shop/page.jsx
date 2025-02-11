@@ -8,6 +8,7 @@ import {
   FaTimes,
   FaBox,
   FaTicketAlt,
+  FaSadTear,
 } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -271,6 +272,14 @@ export default function ShopPage() {
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ffcb05]"></div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 mt-20">
+            <FaSadTear className="text-6xl text-[#0b3c5d]" />
+            <p className="text-2xl text-[#0b3c5d]">No products found</p>
+            <p className="text-sm text-[#1d2731]">
+              Try adjusting your search or filter criteria.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

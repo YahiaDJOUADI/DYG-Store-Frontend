@@ -59,86 +59,10 @@ export default function MyAccount() {
     }
   }, [user]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
 
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData({
-      ...passwordData,
-      [name]: value,
-    });
-  };
+ 
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
 
-    if (!formData.userName || !formData.email) {
-      toast.error("Username and email are required.");
-      return;
-    }
-
-    try {
-      const response = await api().put(`/users/${user._id}`, formData);
-
-      const updatedUser = response.data.user;
-      dispatch(login(updatedUser));
-      setEditMode(false);
-      toast.success("Profile updated successfully!");
-    } catch (err) {
-      console.error("Error updating user data:", err);
-      setError(err.response?.data?.error || "An error occurred");
-      toast.error("Failed to update profile. Please try again.");
-    }
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    setPasswordLoading(true);
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await api().post(
-        "/reset-password",
-        {
-          email: formData.email,
-          ...passwordData,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.message) {
-        toast.success("Password changed successfully!");
-        setPasswordData({ oldPassword: "", newPassword: "" });
-      }
-    } catch (err) {
-      console.error("Error changing password:", err);
-      setError(err.response?.data?.error || "An error occurred");
-      toast.error("Failed to change password. Please try again.");
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
-
-  const handleFieldEdit = (field) => {
-    setEditMode(field);
-  };
-
-  const handleCancelEdit = () => {
-    setEditMode(false);
-    setFormData({
-      userName: user?.userName || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-    });
-  };
 
   if (loading) {
     return (

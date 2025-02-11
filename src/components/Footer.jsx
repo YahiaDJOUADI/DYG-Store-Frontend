@@ -36,7 +36,7 @@ const Footer = () => {
         <div className="flex flex-col items-center md:items-start">
           <img
             src="/DYG Logo - BigCommerce Store Logo.png"
-            alt="DY Games Logo"
+            alt="DYG Store Logo"
             className="h-12 w-auto object-contain"
           />
           <p className="mt-2 text-sm text-[#f2f2f2] text-center md:text-left">
@@ -141,7 +141,7 @@ const Footer = () => {
       {/* Copyright and Contact Email */}
       <div className="max-w-screen-xl mx-auto px-6 mt-8 border-t border-[#0b3c5d] pt-8 text-center">
         <p className="text-sm text-[#f2f2f2]">
-          &copy; 2024 DY Games. All Rights Reserved.
+          &copy; 2024 DYG Store. All Rights Reserved.
         </p>
         <p className="mt-2 text-sm text-[#f2f2f2]">
           Contact us:{" "}

@@ -145,7 +145,7 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Behind DY Games is a passionate developer and visionary, Yahia Djouadi. Get to know the mind behind the magic.
+            Behind DYG Store is a passionate developer and visionary, Yahia Djouadi. Get to know the mind behind the magic.
           </motion.p>
           <motion.div
             className="mt-12 flex flex-col md:flex-row items-center justify-center gap-8"
@@ -180,7 +180,7 @@ export default function About() {
               <h3 className="text-3xl font-bold text-[#ffcb05]">Yahia Djouadi</h3>
               <p className="mt-2 text-lg">Project Owner & Full-Stack Developer</p>
               <p className="mt-4 max-w-md">
-                Yahia is the driving force behind DY Games, combining technical expertise with a passion for gaming to create unforgettable experiences. With a vision to revolutionize the gaming industry, Yahia is dedicated to building a community where gamers can thrive.
+                Yahia is the driving force behind DYG Store, combining technical expertise with a passion for gaming to create unforgettable experiences. With a vision to revolutionize the gaming industry, Yahia is dedicated to building a community where gamers can thrive.
               </p>
               <div className="mt-6 flex gap-4">
                 <motion.a
@@ -216,7 +216,7 @@ export default function About() {
       >
         <h2 className="text-4xl font-bold">Ready to Join the Adventure?</h2>
         <p className="mt-4 text-lg">
-          Discover the ultimate gaming experience with DY Games. Let’s level up together!
+          Discover the ultimate gaming experience with DYG Store. Let’s level up together!
         </p>
         <Link href="/shop">
           <button className="mt-8 px-8 py-4 bg-[#235789] text-[#f2f2f2] font-bold rounded-lg shadow-lg hover:scale-105 transition-all duration-300 transform glow">

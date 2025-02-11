@@ -34,7 +34,7 @@ const Navbar = () => {
 
   
   const { user, isAuthenticated } = useSelector((state) => state.user);
-  const userEmail = user?.email
+  const userType = user?.type;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -98,7 +98,7 @@ const Navbar = () => {
         <Link href="/" className="flex items-center flex-shrink-0 group">
           <img
             src="/DYG Logo - BigCommerce Store Logo.png"
-            alt="DY Games Logo"
+            alt="DYG Store Logo"
             className="h-10 w-auto object-contain transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-active:scale-95 group-active:rotate-0"
           />
         </Link>
@@ -139,7 +139,7 @@ const Navbar = () => {
             </div>
           ) : (
             <UserDropdown
-              email={userEmail}
+              userType={userType}
               dropdownRef={dropdownRef}
               isDropdownOpen={isDropdownOpen}
               setIsDropdownOpen={setIsDropdownOpen}
@@ -155,7 +155,7 @@ const Navbar = () => {
           <MobileMenu
             mobileMenuRef={mobileMenuRef}
             isAuthenticated={isAuthenticated}
-            email={userEmail}
+            userType={userType}
             openLoginModal={openLoginModal}
             toggleMobileMenu={toggleMobileMenu}
             handleLogout={handleLogout}
@@ -204,7 +204,7 @@ const NavLink = ({
 
 // User Dropdown Component
 const UserDropdown = ({
-  email,
+  userType,
   dropdownRef,
   isDropdownOpen,
   setIsDropdownOpen,
@@ -214,13 +214,13 @@ const UserDropdown = ({
     <button
       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
       className="flex items-center space-x-2 text-[#0b3c5d] hover:text-[#ffcb05] transition-all duration-200"
-      title={email || "User"}
+      title={userType || "User"}
       aria-label="User menu"
     >
       <div className="w-8 h-8 bg-[#ffcb05] rounded-full flex items-center justify-center transform transition-transform duration-300 hover:scale-110 overflow-hidden">
         <img
           src={
-            email?.toLowerCase() === "yahia@gmail.com"
+            userType === "admin"
               ? "/cute-angry-diver-gaming-cartoon-vector-icon-illustration-science-technology-icon-isolated-flat_138676-12437.avif"
               : "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif"
           }
@@ -238,12 +238,12 @@ const UserDropdown = ({
         >
           Profile
         </Link>
-        {email?.toLowerCase() === "yahia@gmail.com" && (
+        {userType === "admin" && (
           <Link
             href="/dashboard"
             className="block px-4 py-2 text-sm hover:bg-[#ffcb05] hover:text-white"
           >
-            Admin Dashbord
+            Admin Dashboard
           </Link>
         )}
         <button
@@ -276,7 +276,7 @@ const CartLink = ({ cartItemCount }) => (
 const MobileMenu = ({
   mobileMenuRef,
   isAuthenticated,
-  email,
+  userType,
   openLoginModal,
   toggleMobileMenu,
   handleLogout,
@@ -304,6 +304,9 @@ const MobileMenu = ({
     ) : (
       <>
         <NavLink href="/profile" label="Profile" onClick={toggleMobileMenu} />
+        {userType === "admin" && (
+          <NavLink href="/dashboard" label="Admin Dashboard" onClick={toggleMobileMenu} />
+        )}
         <button
           onClick={handleLogout}
           className="block w-full px-4 py-2 text-sm text-left hover:bg-[#ffcb05] hover:text-white"

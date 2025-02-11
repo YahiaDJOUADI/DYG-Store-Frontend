@@ -4,13 +4,25 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login } from "@/features/userSlice";
 import { motion } from "framer-motion";
-import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, PhoneIcon, LockClosedIcon, SparklesIcon, UserGroupIcon, GiftIcon } from "@heroicons/react/24/solid";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  LockClosedIcon,
+  SparklesIcon,
+  UserGroupIcon,
+  GiftIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import Link from "next/link";
 import api from "@/features/api";
+import { InfoIcon } from "lucide-react";
 
-export default function SignUp() {
+export default function SignUp({ openLoginModal }) {
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -24,7 +36,41 @@ export default function SignUp() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    hasNumber: false,
+    hasSymbol: false,
+  });
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
 
+  // Validate password strength
+  const validatePassword = (password) => {
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const isLengthValid = password.length >= 6;
+
+    setPasswordStrength({
+      length: isLengthValid,
+      hasNumber,
+      hasSymbol,
+    });
+  };
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
+    if (name === "password") {
+      setShowPasswordStrength(true);
+      validatePassword(value);
+    }
+  };
+
+  // Validate all inputs before submission
   const validateInputs = () => {
     const { userName, email, phone, password } = formData;
     if (!userName || !email || !phone || !password) {
@@ -38,6 +84,7 @@ export default function SignUp() {
     return true;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -48,7 +95,12 @@ export default function SignUp() {
 
     try {
       const { userName, email, phone, password } = formData;
-      const response = await api().post("/users", { userName, email, phone, password });
+      const response = await api().post("/users", {
+        userName,
+        email,
+        phone,
+        password,
+      });
       const { token, user } = response.data;
 
       localStorage.setItem("token", token);
@@ -61,14 +113,6 @@ export default function SignUp() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
   };
 
   return (
@@ -279,6 +323,8 @@ export default function SignUp() {
                   required
                   aria-label="Password"
                   disabled={loading}
+                  onFocus={() => setShowPasswordStrength(true)}
+                  onBlur={() => setShowPasswordStrength(false)}
                 />
                 <button
                   type="button"
@@ -293,6 +339,43 @@ export default function SignUp() {
                   )}
                 </button>
               </div>
+
+              {/* Password Strength Feedback */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: showPasswordStrength ? 1 : 0, y: showPasswordStrength ? 0 : -10 }}
+                transition={{ duration: 0.3 }}
+                className={`absolute left-0 right-0 top-[-80px] p-2 rounded-md shadow-lg bg-white border border-gray-300 text-sm text-[#1d2731] transition-all duration-300 ${showPasswordStrength ? "visible" : "invisible"}`}
+              >
+                {/* Arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-gray-300 rotate-45"></div>
+
+                {/* At least 6 characters */}
+                <p className={passwordStrength.length ? "text-green-500" : "text-red-500"}>
+                  {passwordStrength.length ? (
+                    <CheckCircleIcon className="w-4 h-4 inline mr-1" />
+                  ) : (
+                    <XCircleIcon className="w-4 h-4 inline mr-1" />
+                  )}
+                  At least 6 characters
+                </p>
+
+                {/* Contains a number */}
+                <p className={passwordStrength.hasNumber ? "text-green-500" : "text-red-500"}>
+                  {passwordStrength.hasNumber ? (
+                    <CheckCircleIcon className="w-4 h-4 inline mr-1" />
+                  ) : (
+                    <XCircleIcon className="w-4 h-4 inline mr-1" />
+                  )}
+                  Contains a number
+                </p>
+
+                {/* Contains a symbol (just advice) */}
+                <p className="text-gray-500">
+                  <InfoIcon className="w-4 h-4 inline mr-1" /> 
+                  Consider adding a symbol for extra security
+                </p>
+              </motion.div>
             </motion.div>
 
             {/* Terms and Conditions Checkbox */}
@@ -316,12 +399,14 @@ export default function SignUp() {
                 className="ml-2 text-sm text-[#1d2731]"
               >
                 I agree to the{" "}
-                <Link
+                <a
                   href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-[#235789] hover:text-[#ffcb05] transition-all duration-300"
                 >
                   Terms and Conditions
-                </Link>
+                </a>
               </label>
             </motion.div>
 
@@ -347,12 +432,12 @@ export default function SignUp() {
           >
             <p className="text-sm text-[#1d2731]">
               Already have an account?{" "}
-              <Link
-                href="/login"
+              <button
+                onClick={openLoginModal}
                 className="text-[#235789] hover:text-[#ffcb05] transition-all duration-300"
               >
                 Log in
-              </Link>
+              </button>
             </p>
           </motion.div>
         </div>

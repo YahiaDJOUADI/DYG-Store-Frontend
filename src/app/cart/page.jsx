@@ -76,11 +76,19 @@ export default function CartPage() {
 
     const orderData = {
       wilaya: formattedWilaya,
-      products: items.map((item) => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        platform: item.platform, // Include platform in the order data
-      })),
+      products: items.map((item) => {
+        const productData = {
+          productId: item.product.id,
+          quantity: item.quantity,
+        };
+
+        // Include platform if the product category is Video Games
+        if (item.product.category === "Video Games") {
+          productData.platform = item.platform;
+        }
+
+        return productData;
+      }),
       name: data.name,
       phone: data.phone.startsWith("+213") ? data.phone : `+213${data.phone}`,
       address: data.address,

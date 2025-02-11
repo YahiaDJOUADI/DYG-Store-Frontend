@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { login} from "@/features/userSlice";
+import { login } from "@/features/userSlice";
 import { motion } from "framer-motion";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
@@ -28,16 +28,17 @@ const LoginModal = ({ onClose }) => {
       router.push('/');
       onClose();
     } catch (e) {
-      console.log(e)
+      console.log(e);
       setError('Error happened');
     } finally {
       setLoading(false);
     }
   };
-  const SignUp = ()=>{
-    router.push("/signup")
-    onClose()
-  }
+
+  const handleSignUp = () => {
+    router.push('/signup');
+    onClose();
+  };
 
   return (
     <div
@@ -149,7 +150,7 @@ const LoginModal = ({ onClose }) => {
               <button
                 type="button"
                 className="text-[#235789] hover:underline"
-                onClick={SignUp}
+                onClick={handleSignUp}
                 disabled={loading}
               >
                 Sign Up
