@@ -132,7 +132,7 @@ const UserManagement = () => {
                   <Tooltip title="Delete User">
                     <IconButton
                       onClick={() => handleDeleteConfirmation(user._id)}
-                      className="text-[#ffcb05] hover:text-[#e6b800] p-1"
+                      className="text-red-600 hover:text-red-500 p-1"
                     >
                       <FaTrash />
                     </IconButton>
@@ -183,6 +183,8 @@ const UserManagement = () => {
                           }`}>
                             {order.status}
                           </span></p>
+                          <p className="text-gray-600"><strong>Customer Name:</strong> {order.name}</p>
+                          <p className="text-gray-600"><strong>Customer Phone:</strong> {order.phone}</p>
                         </div>
                         <img
                           src={order.products[0]?.productId.image || "/default-product.png"}
