@@ -127,88 +127,96 @@ const OrderManagement = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <CircularProgress style={{ color: "#0b3c5d" }} />
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-7 gap-4 px-6 py-4 bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white font-semibold">
-            <div>Customer</div>
-            <div>Wilaya</div>
-            <div>Total</div>
-            <div>Status</div>
-            <div>Order Date</div>
-            <div>Actions</div>
-          </div>
+     {/* Main Content */}
+{loading ? (
+  <div className="flex h-64 items-center justify-center">
+    <CircularProgress style={{ color: "#0b3c5d" }} />
+  </div>
+) : (
+  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    {/* Table Header */}
+    <div className="grid grid-cols-6 gap-4 px-6 py-4 bg-gradient-to-r from-[#0b3c5d] to-[#235789] text-white font-semibold items-center">
+      <div>Customer</div>
+      <div>Wilaya</div>
+      <div>Total</div>
+      <div>Status</div>
+      <div>Order Date</div>
+      <div>Actions</div>
+    </div>
 
-          {/* Table Body */}
-          <div className="divide-y divide-gray-100">
-            {orders.map((order) => (
-              <div key={order.id} className="grid grid-cols-7 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                {/* Customer */}
-                <div className="font-medium text-gray-900">{order.name}</div>
-                
-                {/* Wilaya */}
-                <div className="text-gray-600">({order.wilaya})</div>
-                
-                {/* Total */}
-                <div className="font-semibold text-[#0b3c5d]">{order.totalPrice} DZD</div>
-                
-                {/* Status */}
-                <div>
-                  <Chip
-                    label={order.status}
-                    className={`capitalize text-sm ${
-                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-amber-100 text-amber-800'
-                    }`}
-                  />
-                </div>
-                
-                {/* Order Date */}
-                <div className="text-gray-500 text-sm">
-                  {new Date(order.orderDate).toLocaleDateString()}
-                </div>
-                
-                {/* Actions */}
-                <div className="flex  space-x-2">
-                  <Tooltip title="View Details">
-                    <IconButton
-                      onClick={() => fetchOrderDetails(order.id)}
-                      className="text-[#0b3c5d] hover:bg-[#0b3c5d]/10"
-                    >
-                      <FaEye />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Update Status">
-                    <IconButton
-                      onClick={(e) => handleStatusMenuOpen(e, order.id)}
-                      className="text-[#235789] hover:bg-[#235789]/10"
-                    >
-                      <FaEdit />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Delete Order">
-                    <IconButton
-                      onClick={() => handleDeleteOrder(order.id)}
-                      className="text-red-600 hover:bg-[#ffcb05]/10"
-                    >
-                      <FaBan />
-                    </IconButton>
-                  </Tooltip>
-                </div>
-              </div>
-            ))}
+    {/* Table Body */}
+    <div className="divide-y divide-gray-100">
+      {orders.map((order) => (
+        <div
+          key={order.id}
+          className="grid grid-cols-6 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
+        >
+          {/* Customer */}
+          <div className="font-medium text-gray-900">{order.name}</div>
+          
+          {/* Wilaya */}
+          <div className="text-gray-600">{order.wilaya}</div>
+          
+          {/* Total */}
+          <div className="font-semibold text-[#0b3c5d]">
+            {order.totalPrice} DZD
+          </div>
+          
+          {/* Status */}
+          <div>
+            <Chip
+              label={order.status}
+              className={`capitalize text-sm ${
+                order.status === "delivered"
+                  ? "bg-green-100 text-green-800"
+                  : order.status === "shipped"
+                  ? "bg-blue-100 text-blue-800"
+                  : order.status === "cancelled"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-amber-100 text-amber-800"
+              }`}
+            />
+          </div>
+          
+          {/* Order Date */}
+          <div className="text-gray-500 text-sm">
+            {new Date(order.orderDate).toLocaleDateString()}
+          </div>
+          
+          {/* Actions */}
+          <div className="flex space-x-2 justify-end">
+            <Tooltip title="View Details">
+              <IconButton
+                onClick={() => fetchOrderDetails(order.id)}
+                className="text-[#0b3c5d] hover:bg-[#0b3c5d]/10"
+              >
+                <FaEye />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Update Status">
+              <IconButton
+                onClick={(e) => handleStatusMenuOpen(e, order.id)}
+                className="text-[#235789] hover:bg-[#235789]/10"
+              >
+                <FaEdit />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Delete Order">
+              <IconButton
+                onClick={() => handleDeleteOrder(order.id)}
+                className="text-red-600 hover:bg-[#ffcb05]/10"
+              >
+                <FaTrash />
+              </IconButton>
+            </Tooltip>
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
 
       {/* Order Details Modal */}
       <Dialog open={showOrderModal} onClose={() => setShowOrderModal(false)} maxWidth="lg" fullWidth>
@@ -320,9 +328,9 @@ const OrderManagement = () => {
                   <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
                     <div className="flex items-center space-x-4">
                       <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                        {item.productId.image ? (
+                        {item.productId.mainImage ? (
                           <img
-                            src={item.productId.image}
+                            src={item.productId.mainImage}
                             alt={item.productId.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {

@@ -1,32 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { FaUserCircle, FaEdit, FaSave, FaTimes, FaSpinner, FaEye, FaEyeSlash, FaGamepad } from "react-icons/fa";
-import { login } from "@/features/userSlice";
+import { FaSpinner } from "react-icons/fa";
 import api from "@/features/api";
-import Wishlist from "@/components/Wishlist"; 
+import PersonalInfo from "@/components/profileComponents/Personalinfo";
+import Wishlist from "@/components/Wishlist";
+import OrderList from "@/components/profileComponents/OrderList";
 
-export default function MyAccount() {
-  const dispatch = useDispatch();
+const ProfilePage = () => {
   const { user } = useSelector((state) => state.user);
   const [wishlist, setWishlist] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({
-    userName: "",
-    email: "",
-    phone: "",
-  });
-  const [passwordData, setPasswordData] = useState({
-    oldPassword: "",
-    newPassword: "",
-  });
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("personalInfo");
 
   const defaultProfilePicture =
     user?.type === "admin"
@@ -35,11 +23,16 @@ export default function MyAccount() {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        userName: user.userName || "",
-        email: user.email || "",
-        phone: user.phone || "",
-      });
+      const fetchDetails = async () => {
+        try {
+          const userDetailsResponse = await api().get(`/users/${user._id}/details`);
+          const { user: userDetails, orders: userOrders } = userDetailsResponse.data;
+          setOrders(userOrders);
+        } catch (err) {
+          console.error("Error fetching user details:", err);
+          setError(err.response?.data?.error || "An error occurred");
+        }
+      };
 
       const fetchWishlist = async () => {
         try {
@@ -48,21 +41,29 @@ export default function MyAccount() {
         } catch (err) {
           console.error("Error fetching wishlist:", err);
           setError(err.response?.data?.error || "An error occurred");
-        } finally {
-          setLoading(false);
         }
       };
 
+      fetchDetails();
       fetchWishlist();
+      setLoading(false);
     } else {
       setLoading(false);
     }
   }, [user]);
 
-
- 
-
-
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "personalInfo":
+        return <PersonalInfo user={user} />;
+      case "wishlist":
+        return <Wishlist wishlist={wishlist} setWishlist={setWishlist} />;
+      case "orders":
+        return <OrderList orders={orders} />;
+      default:
+        return null;
+    }
+  };
 
   if (loading) {
     return (
@@ -108,201 +109,49 @@ export default function MyAccount() {
           <p className="text-md text-[#1d2731]">{user?.email}</p>
         </div>
 
-        {/* Gamer Stats Section */}
-        <div className="mt-8 bg-gradient-to-r from-[#235789] to-[#0b3c5d] p-6 rounded-lg text-white">
-          <h3 className="text-2xl font-semibold mb-4 flex items-center space-x-2">
-            <FaGamepad />
-            <span>Gamer Stats</span>
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-lg font-bold">{wishlist.length}</p>
-              <p className="text-sm">Wishlist Items</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold">5</p>
-              <p className="text-sm">Orders Placed</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold">3</p>
-              <p className="text-sm">Achievements Unlocked</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold">Level 10</p>
-              <p className="text-sm">Gamer Level</p>
-            </div>
+        {/* Tab Navigation */}
+        <div className="mt-8">
+          <div className="flex justify-center space-x-8">
+            <button
+              className={`py-2 px-4 rounded-lg font-semibold transition-all duration-300 ${
+                activeTab === "personalInfo"
+                  ? "bg-[#235789] text-white shadow-md hover:bg-[#1a446b]"
+                  : "bg-[#e0e0e0] text-[#1d2731] hover:bg-[#d0d0d0] hover:text-[#235789]"
+              }`}
+              onClick={() => setActiveTab("personalInfo")}
+            >
+              Personal Information
+            </button>
+            <button
+              className={`py-2 px-4 rounded-lg font-semibold transition-all duration-300 ${
+                activeTab === "wishlist"
+                  ? "bg-[#235789] text-white shadow-md hover:bg-[#1a446b]"
+                  : "bg-[#e0e0e0] text-[#1d2731] hover:bg-[#d0d0d0] hover:text-[#235789]"
+              }`}
+              onClick={() => setActiveTab("wishlist")}
+            >
+              Wishlist
+            </button>
+            <button
+              className={`py-2 px-4 rounded-lg font-semibold transition-all duration-300 ${
+                activeTab === "orders"
+                  ? "bg-[#235789] text-white shadow-md hover:bg-[#1a446b]"
+                  : "bg-[#e0e0e0] text-[#1d2731] hover:bg-[#d0d0d0] hover:text-[#235789]"
+              }`}
+              onClick={() => setActiveTab("orders")}
+            >
+              Orders
+            </button>
           </div>
         </div>
 
-        {/* Personal Information Section */}
+        {/* Tab Content */}
         <div className="mt-8">
-          <h3 className="text-2xl font-semibold text-[#1d2731] mb-4 flex items-center space-x-2">
-            <FaUserCircle />
-            <span>Personal Information</span>
-          </h3>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Username Field */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <label className="block text-[#1d2731]">Username</label>
-                {editMode === "userName" ? (
-                  <input
-                    type="text"
-                    name="userName"
-                    value={formData.userName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-[#235789] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789]"
-                  />
-                ) : (
-                  <span className="block text-lg text-[#1d2731]">
-                    {user?.userName}
-                  </span>
-                )}
-              </div>
-              <FaEdit
-                className="cursor-pointer text-[#235789] text-xl hover:text-[#0b3c5d] transition-all"
-                onClick={() => handleFieldEdit("userName")}
-              />
-            </div>
-            {/* Email Field */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <label className="block text-[#1d2731]">Email</label>
-                {editMode === "email" ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-[#235789] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789]"
-                  />
-                ) : (
-                  <span className="block text-lg text-[#1d2731]">
-                    {user?.email}
-                  </span>
-                )}
-              </div>
-              <FaEdit
-                className="cursor-pointer text-[#235789] text-xl hover:text-[#0b3c5d] transition-all"
-                onClick={() => handleFieldEdit("email")}
-              />
-            </div>
-            {/* Phone Field */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <label className="block text-[#1d2731]">Phone</label>
-                {editMode === "phone" ? (
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-[#235789] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789]"
-                  />
-                ) : (
-                  <span className="block text-lg text-[#1d2731]">
-                    {user?.phone}
-                  </span>
-                )}
-              </div>
-              <FaEdit
-                className="cursor-pointer text-[#235789] text-xl hover:text-[#0b3c5d] transition-all"
-                onClick={() => handleFieldEdit("phone")}
-              />
-            </div>
-            {/* Save and Cancel Buttons */}
-            {editMode && (
-              <div className="flex justify-end space-x-4 mt-6">
-                <motion.button
-                  type="submit"
-                  className="py-2 px-4 bg-[#235789] text-white rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-[#0b3c5d] transition-all"
-                >
-                  <FaSave />
-                  <span>Save Changes</span>
-                </motion.button>
-                <motion.button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="py-2 px-4 bg-[#ffcb05] text-[#1d2731] rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-[#e6b800] transition-all"
-                >
-                  <FaTimes />
-                  <span>Cancel</span>
-                </motion.button>
-              </div>
-            )}
-          </form>
+          {renderTabContent()}
         </div>
-
-        {/* Password Change Section */}
-        <div className="mt-8">
-          <h3 className="text-2xl font-semibold text-[#1d2731] mb-4 flex items-center space-x-2">
-            <FaEye />
-            <span>Change Password</span>
-          </h3>
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            {/* Old Password Field */}
-            <div className="flex items-center space-x-4">
-              <label className="block text-[#1d2731]">Old Password</label>
-              <div className="flex-1">
-                <input
-                  type={showOldPassword ? "text" : "password"}
-                  name="oldPassword"
-                  value={passwordData.oldPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full px-3 py-2 border border-[#235789] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789]"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowOldPassword(!showOldPassword)}
-                className="text-xl text-[#235789] hover:text-[#0b3c5d] transition-all"
-              >
-                {showOldPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-            {/* New Password Field */}
-            <div className="flex items-center space-x-4">
-              <label className="block text-[#1d2731]">New Password</label>
-              <div className="flex-1">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full px-3 py-2 border border-[#235789] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235789]"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="text-xl text-[#235789] hover:text-[#0b3c5d] transition-all"
-              >
-                {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-            {/* Save Password Button */}
-            <div className="flex justify-end space-x-4 mt-6">
-              <motion.button
-                type="submit"
-                className="py-2 px-4 bg-[#235789] text-white rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-[#0b3c5d] transition-all"
-                disabled={passwordLoading}
-              >
-                {passwordLoading ? (
-                  <FaSpinner className="animate-spin" />
-                ) : (
-                  <>
-                    <FaSave />
-                    <span>Change Password</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </form>
-        </div>
-
-        {/* Wishlist Section */}
-        <Wishlist wishlist={wishlist} setWishlist={setWishlist} />
       </motion.div>
     </div>
   );
-}
+};
+
+export default ProfilePage;

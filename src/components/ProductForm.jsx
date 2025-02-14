@@ -2,7 +2,17 @@
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, ListItemText, OutlinedInput } from "@mui/material";
+import {
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
+} from "@mui/material";
 import { useDropzone } from "react-dropzone";
 import { CloudUpload } from "@mui/icons-material";
 import api from "@/features/api";
@@ -10,33 +20,55 @@ import api from "@/features/api";
 const platformsOptions = ["PS5", "PS4", "Xbox Series X/S", "PC"];
 
 const ProductForm = ({ product, onSubmit }) => {
-  const { control, handleSubmit, formState: { errors }, setValue } = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm({
     defaultValues: {
       name: product?.name || "",
       category: product?.category || "",
-      image: null,
+      mainImage: null,
+      images: [],
       price: product?.price || "",
       stock: product?.stock || "",
       description: product?.description || "",
       brand: product?.brand || "",
       platforms: product?.platforms || [],
-    }
+    },
   });
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState(product?.image || null);
+  const [mainImagePreview, setMainImagePreview] = useState(
+    product?.mainImage || null
+  );
+  const [imagesPreview, setImagesPreview] = useState(
+    product?.images || []
+  );
 
-  const onDrop = (acceptedFiles) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setValue("image", file);
-      setPreview(URL.createObjectURL(file));
+  const onDrop = (acceptedFiles, isMainImage = false) => {
+    if (isMainImage) {
+      const file = acceptedFiles[0];
+      if (file) {
+        setValue("mainImage", file);
+        setMainImagePreview(URL.createObjectURL(file));
+      }
+    } else {
+      setValue("images", acceptedFiles);
+      setImagesPreview(acceptedFiles.map(file => URL.createObjectURL(file)));
     }
   };
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
+  const { getRootProps: getMainImageRootProps, getInputProps: getMainImageInputProps } = useDropzone({
+    onDrop: (files) => onDrop(files, true),
     accept: "image/*",
-    multiple: false
+    multiple: false,
+  });
+
+  const { getRootProps: getImagesRootProps, getInputProps: getImagesInputProps } = useDropzone({
+    onDrop: (files) => onDrop(files, false),
+    accept: "image/*",
+    multiple: true,
   });
 
   const onSubmitHandler = async (data) => {
@@ -52,8 +84,8 @@ const ProductForm = ({ product, onSubmit }) => {
       toast.error("Please select a category.");
       return;
     }
-    if (!data.image && !product) {
-      toast.error("Please upload an image.");
+    if (!data.mainImage && !product) {
+      toast.error("Please upload a main image.");
       return;
     }
     if (!data.price || data.price <= 0) {
@@ -80,6 +112,8 @@ const ProductForm = ({ product, onSubmit }) => {
       if (data[key] !== null && key !== "id") {
         if (key === "platforms") {
           data[key].forEach((platform) => dataToSend.append(key, platform));
+        } else if (key === "images") {
+          data[key].forEach((image) => dataToSend.append(key, image));
         } else {
           dataToSend.append(key, data[key]);
         }
@@ -217,17 +251,40 @@ const ProductForm = ({ product, onSubmit }) => {
         />
       </div>
 
-      {/* Modern Drag & Drop File Upload */}
-      <div {...getRootProps()} className="border-2 border-dashed border-gray-400 p-6 rounded-lg text-center cursor-pointer hover:border-gray-600">
-        <input {...getInputProps()} />
-        {preview ? (
-          <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-lg shadow-md" />
-        ) : (
-          <div className="flex flex-col items-center">
-            <CloudUpload className="text-gray-500 text-4xl" />
-            <p className="text-gray-600 mt-2">Drag & drop an image here, or click to select one</p>
-          </div>
-        )}
+      {/* Main Image Upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Main Image</label>
+        <div {...getMainImageRootProps()} className="border-2 border-dashed border-gray-400 p-6 rounded-lg text-center cursor-pointer hover:border-gray-600">
+          <input {...getMainImageInputProps()} />
+          {mainImagePreview ? (
+            <img src={mainImagePreview} alt="Main Preview" className="max-h-40 mx-auto rounded-lg shadow-md" />
+          ) : (
+            <div className="flex flex-col items-center">
+              <CloudUpload className="text-gray-500 text-4xl" />
+              <p className="text-gray-600 mt-2">Drag & drop the main image here, or click to select one</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Additional Images Upload */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Additional Images</label>
+        <div {...getImagesRootProps()} className="border-2 border-dashed border-gray-400 p-6 rounded-lg text-center cursor-pointer hover:border-gray-600">
+          <input {...getImagesInputProps()} />
+          {imagesPreview.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {imagesPreview.map((src, index) => (
+                <img key={index} src={src} alt={`Preview ${index}`} className="max-h-40 mx-auto rounded-lg shadow-md" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <CloudUpload className="text-gray-500 text-4xl" />
+              <p className="text-gray-600 mt-2">Drag & drop additional images here, or click to select them</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Description */}

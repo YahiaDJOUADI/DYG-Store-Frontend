@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  FaTrash, FaUsers, FaEye
+  FaTrash, FaUsers, FaEye, FaListAlt, FaCalendarAlt, FaTruck, FaMapMarkerAlt, FaPhoneAlt, FaBoxOpen, FaUser 
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import api from "@/features/api";
@@ -69,6 +69,30 @@ const UserManagement = () => {
         }
       }
     });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "shipped":
+        return "bg-[#0b3c5d] text-white";
+      case "pending":
+        return "bg-[#f2f2f2] text-[#1d2731] border border-[#0b3c5d]";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getProgress = (status) => {
+    switch (status.toLowerCase()) {
+      case "delivered":
+        return { width: "100%", color: "bg-green-500" };
+      case "shipped":
+        return { width: "66%", color: "bg-[#0b3c5d]" };
+      default:
+        return { width: "33%", color: "bg-[#235789]" };
+    }
   };
 
   return (
@@ -151,7 +175,7 @@ const UserManagement = () => {
         </DialogTitle>
         <DialogContent className="p-6">
           {selectedUser && (
-            <div className="space-y-6">
+            <div className="space-y-6 py-3">
               <div className="flex items-center space-x-4">
                 <img
                   src="/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif"
@@ -165,50 +189,112 @@ const UserManagement = () => {
                 </div>
               </div>
               <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-900">Orders</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Orders ({selectedUser.orders.length})
+                </h3>
                 <div className="space-y-4">
-                  {selectedUser.orders.map((order) => (
-                    <div key={order._id} className="p-4 bg-gray-100 rounded-lg shadow-sm">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Total Price: {order.totalPrice} DZD</h4>
-                          <p className="text-gray-600">Order Date: {new Date(order.orderDate).toLocaleDateString()}</p>
-                          <p className="text-gray-600">Last Updated: {new Date(order.updatedAt).toLocaleDateString()}</p>
-                          <p className="text-gray-600">Wilaya: {order.wilaya}</p>
-                          <p className="text-gray-600"><strong>Status:</strong> <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                            order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                            order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {order.status}
-                          </span></p>
-                          <p className="text-gray-600"><strong>Customer Name:</strong> {order.name}</p>
-                          <p className="text-gray-600"><strong>Customer Phone:</strong> {order.phone}</p>
-                        </div>
-                        <img
-                          src={order.products[0]?.productId.image || "/default-product.png"}
-                          alt="Product"
-                          className="w-16 h-16 rounded-full"
-                        />
-                      </div>
-                      <div className="mt-4">
-                        {order.products.map((product) => (
-                          <div key={product.productId.id} className="flex justify-between items-center">
-                            <div>
-                              <p className="text-gray-900">{product.productId.name}</p>
-                              <p className="text-gray-600">Quantity: {product.quantity}</p>
-                              {product.productId.category === "Video Games" && product.platform && (
-                                <p className="text-gray-600">
-                                  Platform: <span className="font-semibold text-gray-700">{product.platform}</span>
-                                </p>
-                              )}
-                            </div>
+                  {selectedUser.orders.map((order) => {
+                    const progress = getProgress(order.status);
+
+                    return (
+                      <div key={order._id} className="border border-[#0b3c5d] p-6 rounded-lg shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
+                        {/* Order Header */}
+                        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+                          <div className="space-y-2">
+                            {/* Customer Name */}
+                            <p className="text-sm text-[#235789] flex items-center">
+                              <FaUser className="mr-2 text-[#0b3c5d]" />
+                              <span>Customer: {order.name}</span>
+                            </p>
+                            <p className="text-sm text-[#235789] flex items-center">
+                              <FaCalendarAlt className="mr-2 text-[#0b3c5d]" />
+                              <span>Date: {new Date(order.orderDate).toLocaleDateString()}</span>
+                            </p>
+                            <p className="text-sm text-[#235789] flex items-center">
+                              <FaBoxOpen className="mr-2 text-[#0b3c5d]" />
+                              <span>Total: {order.totalPrice} DZD</span>
+                            </p>
                           </div>
-                        ))}
+
+                          {/* Status Badge */}
+                          <div className="space-y-2">
+                            <p className="text-sm text-[#235789] flex items-center">
+                              <FaTruck className="mr-2 text-[#0b3c5d]" />
+                              <span>Status: </span>
+                              <span className={`ml-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+                                {order.status}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mt-4 mb-6">
+                          <div className="w-full bg-[#e0e0e0] rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${progress.color} transition-all duration-500`}
+                              style={{ width: progress.width }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-[#235789] mt-2">
+                            <span>Ordered</span>
+                            <span>Shipped</span>
+                            <span>Delivered</span>
+                          </div>
+                        </div>
+
+                        {/* Shipping Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          <div className="flex items-center text-sm text-[#235789]">
+                            <FaMapMarkerAlt className="mr-2 text-[#0b3c5d] flex-shrink-0" />
+                            <span>{order.address}, {order.wilaya}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-[#235789]">
+                            <FaPhoneAlt className="mr-2 text-[#0b3c5d] flex-shrink-0" />
+                            <span>{order.phone}</span>
+                          </div>
+                        </div>
+
+                        {/* Products List */}
+                        <div>
+                          <strong className="block mb-4 text-[#1d2731]">Products:</strong>
+                          <ul className="space-y-4">
+                            {order.products.map((product) => (
+                              <li
+                                key={product.productId.id}
+                                className="flex space-x-4 items-center p-4 rounded-lg bg-[#f2f2f2] hover:bg-[#e0e0e0] transition-colors duration-300"
+                              >
+                                <img
+                                  src={product.productId.mainImage}
+                                  alt={product.productId.name}
+                                  className="w-16 h-16 object-cover rounded-lg shadow-sm"
+                                />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-[#1d2731]">{product.productId.name}</p>
+                                  <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                                    <span className="text-[#235789]">Quantity: {product.quantity}</span>
+                                    <span className="text-[#0b3c5d]">Platform: {product.platform}</span>
+                                    <span className="text-[#235789]">Price: {product.productId.price} DZD</span>
+                                    <span className="text-[#0b3c5d]">Total: {product.quantity * product.productId.price} DZD</span>
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Order Timestamps */}
+                        <div className="mt-6 text-[#1d2731] text-sm space-y-2">
+                          <p>
+                            <strong>Order Created At:</strong> {new Date(order.createdAt).toLocaleDateString()}
+                          </p>
+                          <p>
+                            <strong>Last Updated At:</strong> {new Date(order.updatedAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

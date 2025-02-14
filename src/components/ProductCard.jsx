@@ -68,7 +68,7 @@ export default function ProductCard({ product }) {
     >
       <div className="relative">
         <img
-          src={product.image}
+          src={product.mainImage}
           alt={product.name}
           className="w-full h-48 object-cover"
         />

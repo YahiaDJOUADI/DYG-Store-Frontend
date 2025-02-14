@@ -1,46 +1,20 @@
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaArrowUp } from "react-icons/fa";
 import { useState } from "react";
-import Swal from "sweetalert2";
 
 const Footer = () => {
-  const [email, setEmail] = useState("");
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-
-    // SweetAlert2 Modal with Custom Colors
-    Swal.fire({
-      title: `🎮 Welcome, Gamer! 🎮`,
-      text: `Thank you for subscribing with ${email}! Get ready for exclusive updates, offers, and gaming news.`,
-      icon: "success",
-      confirmButtonColor: "#0b3c5d", // Primary color
-      background: "#1d2731", // Dark background
-      color: "#f2f2f2", // Light text
-      iconColor: "#ffcb05", // Accent color
-      confirmButtonText: "Let's Play!",
-      customClass: {
-        title: "text-[#ffcb05] font-bold", // Accent color for title
-        popup: "rounded-lg border-2 border-[#0b3c5d]", // Primary color for border
-        confirmButton: "hover:bg-[#ffcb05] transition duration-300", // Accent color on hover
-      },
-    });
-
-    setEmail("");
-  };
-
   return (
-    <footer className="bg-[#1d2731] text-[#f2f2f2] py-12">
-      <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+    <footer className="bg-[#1d2731] text-[#f2f2f2] py-12 relative">
+      <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Logo and Slogan */}
         <div className="flex flex-col items-center md:items-start">
           <img
             src="/DYG Logo - BigCommerce Store Logo.png"
             alt="DYG Store Logo"
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
           />
           <p className="mt-2 text-sm text-[#f2f2f2] text-center md:text-left">
-          Power Up Your Playtime!
+            Power Up Your Playtime!
           </p>
         </div>
 
@@ -48,16 +22,16 @@ const Footer = () => {
         <div className="flex flex-col items-center md:items-start">
           <h3 className="text-lg font-semibold mb-4 text-[#f2f2f2]">Quick Links</h3>
           <div className="flex flex-col gap-2 text-sm text-[#f2f2f2]">
-            <Link href="/" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Home
             </Link>
-            <Link href="/shop" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/shop" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Shop
             </Link>
-            <Link href="/about" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/about" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               About
             </Link>
-            <Link href="/contact" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/contact" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Contact
             </Link>
           </div>
@@ -67,39 +41,16 @@ const Footer = () => {
         <div className="flex flex-col items-center md:items-start">
           <h3 className="text-lg font-semibold mb-4 text-[#f2f2f2]">Legal</h3>
           <div className="flex flex-col gap-2 text-sm text-[#f2f2f2]">
-            <Link href="/privacy-policy" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/privacy-policy" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Privacy Policy
             </Link>
-            <Link href="/terms-of-service" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/terms-of-service" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Terms of Service
             </Link>
-            <Link href="/cookie-policy" className="hover:text-[#ffcb05] transition duration-300">
+            <Link href="/cookie-policy" className="hover:text-[#ffcb05] transition duration-300 hover:translate-x-1">
               Cookie Policy
             </Link>
           </div>
-        </div>
-
-        {/* Newsletter Subscription */}
-        <div className="flex flex-col items-center md:items-start">
-          <h3 className="text-lg font-semibold mb-4 text-[#f2f2f2]">Subscribe</h3>
-          <form onSubmit={handleSubscribe} className="w-full">
-            <div className="flex flex-col gap-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-md bg-[#0b3c5d] text-[#f2f2f2] placeholder-[#f2f2f2] focus:outline-none focus:ring-2 focus:ring-[#ffcb05]"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full px-4 py-2 bg-[#ffcb05] text-[#1d2731] rounded-md hover:bg-[#0b3c5d] hover:text-[#f2f2f2] transition duration-300"
-              >
-                Subscribe
-              </button>
-            </div>
-          </form>
         </div>
 
         {/* Social Media Links */}
@@ -110,29 +61,33 @@ const Footer = () => {
               href="https://www.facebook.com"
               target="_blank"
               aria-label="Facebook"
+              className="hover:scale-110 transition-transform duration-300"
             >
-              <FaFacebook className="text-[#ffcb05] hover:text-[#0b3c5d] transition duration-300" />
+              <FaFacebook className="text-[#ffcb05] hover:text-[#0b3c5d]" />
             </Link>
             <Link
               href="https://www.twitter.com"
               target="_blank"
               aria-label="Twitter"
+              className="hover:scale-110 transition-transform duration-300"
             >
-              <FaTwitter className="text-[#ffcb05] hover:text-[#0b3c5d] transition duration-300" />
+              <FaTwitter className="text-[#ffcb05] hover:text-[#0b3c5d]" />
             </Link>
             <Link
               href="https://www.instagram.com"
               target="_blank"
               aria-label="Instagram"
+              className="hover:scale-110 transition-transform duration-300"
             >
-              <FaInstagram className="text-[#ffcb05] hover:text-[#0b3c5d] transition duration-300" />
+              <FaInstagram className="text-[#ffcb05] hover:text-[#0b3c5d]" />
             </Link>
             <Link
               href="https://www.linkedin.com"
               target="_blank"
               aria-label="LinkedIn"
+              className="hover:scale-110 transition-transform duration-300"
             >
-              <FaLinkedin className="text-[#ffcb05] hover:text-[#0b3c5d] transition duration-300" />
+              <FaLinkedin className="text-[#ffcb05] hover:text-[#0b3c5d]" />
             </Link>
           </div>
         </div>

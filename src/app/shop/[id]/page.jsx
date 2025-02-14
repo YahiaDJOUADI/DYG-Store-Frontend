@@ -8,6 +8,7 @@ import {
   FaCartPlus,
   FaGamepad,
   FaHeadset,
+  FaShoppingCart,
   FaTicketAlt,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -37,6 +38,12 @@ export default function ProductPage() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const dispatch = useDispatch();
 
+  // State for carousel
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Combine mainImage and images into one array for the carousel
+  const carouselImages = product ? [product.mainImage, ...product.images] : [];
+
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
@@ -65,18 +72,23 @@ export default function ProductPage() {
       try {
         const params = {
           category: product.category, // Filter by the same category
-          limit: 4, // Limit to 4 related products
+          limit: 5, 
           exclude: product.id, // Exclude the current product
         };
 
         const response = await api().get("/products", { params });
 
-        // Filter out the current product from the response (in case the backend doesn't handle `exclude`)
-        const filteredRelatedProducts = response.data.filter(
-          (p) => p.id !== product.id
-        );
+        console.log("API Response:", response.data); // Log the response for debugging
 
-        setRelatedProducts(filteredRelatedProducts);
+        if (response.data && response.data.products) {
+          // Assuming the related products are in response.data.products
+          const filteredRelatedProducts = response.data.products.filter(
+            (p) => p.id !== product.id
+          );
+          setRelatedProducts(filteredRelatedProducts);
+        } else {
+          console.error("Error: response.data.products is not an array");
+        }
       } catch (err) {
         console.error("Error fetching related products:", err);
       }
@@ -103,6 +115,20 @@ export default function ProductPage() {
       default:
         return null;
     }
+  };
+
+  // Function to handle next image
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  // Function to handle previous image
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
+    );
   };
 
   // Loading state
@@ -154,50 +180,75 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-[#f2f2f2] text-[#1d2731]">
       {/* Product Details Section */}
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Product Card */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-[#0b3c5d] relative">
-          {/* Back to Shop Button */}
-          <button
-            className="bg-white text-center w-48 rounded-2xl h-14 relative text-black text-xl font-semibold group"
-            type="button"
-            onClick={() => router.back()}
-          >
-            <div className="bg-[#ffcb05] rounded-xl h-12 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[184px] z-10 duration-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 1024 1024"
-                height="25px"
-                width="25px"
-              >
-                <path
-                  d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-                  fill="#000000"
-                ></path>
-                <path
-                  d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-                  fill="#000000"
-                ></path>
-              </svg>
-            </div>
-            <p className="translate-x-2">Go Back</p>
-          </button>
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-[#0b3c5d]">
+          {/* Back Button */}
+          <div className="p-4 border-b border-[#0b3c5d]">
+            <button
+              className="flex items-center gap-2 text-[#1d2731] hover:text-[#ffcb05] transition-colors"
+              onClick={() => router.back()}
+            >
+              <FaArrowLeft className="text-lg" />
+              <span className="text-md font-semibold">Back to Shop</span>
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-            {/* Product Image */}
-            <div className="flex items-center justify-center">
-              <motion.img
-                src={product.image}
-                alt={`Image of ${product.name}`}
-                className="w-full h-auto max-h-[400px] object-cover rounded-lg shadow-md"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-              />
+            {/* Product Image Carousel */}
+            <div className="flex flex-col items-center justify-center p-4">
+              {/* Main Image with Navigation Arrows */}
+              <div className="relative w-full">
+                <motion.img
+                  src={carouselImages[currentImageIndex]}
+                  alt={`Image of ${product.name}`}
+                  className="w-full h-auto max-h-[400px] object-contain rounded-lg"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                />
+                {/* Navigation Arrows */}
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-[#0b3c5d] text-white p-2 rounded-full hover:bg-[#ffcb05] hover:text-[#1d2731] transition-all"
+                >
+                  <FaArrowLeft className="text-xl" />
+                </button>
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#0b3c5d] text-white p-2 rounded-full hover:bg-[#ffcb05] hover:text-[#1d2731] transition-all"
+                >
+                  <FaArrowRight className="text-xl" />
+                </button>
+              </div>
+
+              {/* Thumbnails */}
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                {carouselImages.map((image, index) => (
+                  <motion.div
+                    key={index}
+                    className={`relative overflow-hidden rounded-lg cursor-pointer border-2 ${
+                      currentImageIndex === index
+                        ? "border-[#ffcb05]"
+                        : "border-transparent"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-20 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300"></div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
             {/* Product Details */}
-            <div className="space-y-4">
+            <div className="space-y-4 p-4">
               {/* Product Name */}
               <motion.h1
                 className="text-4xl font-bold text-[#1d2731]"
@@ -210,13 +261,13 @@ export default function ProductPage() {
 
               {/* Price */}
               <motion.div
-                className="flex items-center gap-2 text-4xl font-bold text-[#0b3c5d] mb-4"
+                className="flex items-center gap-2 text-3xl font-bold text-[#0b3c5d]"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
                 <span>{product.price}</span>
-                <span className="text-2xl text-[#ffcb05]">DZD</span>
+                <span className="text-xl text-[#ffcb05]">DZD</span>
               </motion.div>
 
               {/* Brand */}
@@ -242,7 +293,7 @@ export default function ProductPage() {
 
               {/* Product Description */}
               <motion.p
-                className="text-[#1d2731] text-lg"
+                className="text-[#1d2731] text-lg leading-relaxed"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1 }}
@@ -318,11 +369,11 @@ export default function ProductPage() {
                 <button
                   onClick={handleAddToCart}
                   disabled={isAddingToCart || product.stock <= 0}
-                  className={`flex items-center gap-2 px-8 py-3 bg-[#235789] text-white font-bold rounded-md ${
+                  className={`flex items-center gap-2 px-6 py-2 bg-[#235789] text-white font-bold rounded-lg ${
                     product.stock > 0
                       ? "hover:bg-[#ffcb05] hover:text-[#0b3c5d] hover:scale-105"
                       : "opacity-50 cursor-not-allowed"
-                  } transition-all duration-300 transform shadow-md`}
+                  } transition-all duration-300 transform shadow-lg`}
                 >
                   {isAddingToCart ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
@@ -335,17 +386,17 @@ export default function ProductPage() {
                 <button
                   onClick={handleBuyNow}
                   disabled={isAddingToCart || product.stock <= 0} // Disable if out of stock
-                  className={`flex items-center gap-2 px-8 py-3 bg-[#ffcb05] text-[#0b3c5d] font-bold rounded-md ${
+                  className={`flex items-center gap-2 px-6 py-2 bg-[#ffcb05] text-[#0b3c5d] font-bold rounded-lg ${
                     product.stock > 0
                       ? "hover:bg-[#235789] hover:text-white hover:scale-105"
                       : "opacity-50 cursor-not-allowed"
-                  } transition-all duration-300 transform shadow-md`}
+                  } transition-all duration-300 transform shadow-lg`}
                 >
                   {isAddingToCart ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1d2731]"></div>
                   ) : (
                     <>
-                      <FaCartPlus /> Buy Now
+                      <FaShoppingCart /> Buy Now
                     </>
                   )}
                 </button>
@@ -354,33 +405,33 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Related Products */}
+        {/* Related Products Section */}
         <motion.div
           className="mt-12"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.8 }}
         >
-          <h2 className="text-2xl font-bold text-[#1d2731] mb-4">
+          <h2 className="text-2xl font-bold text-[#1d2731] mb-6">
             Related Products
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
               <motion.div
                 key={relatedProduct.id}
-                className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
+                className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-[#0b3c5d]"
                 whileHover={{ scale: 1.03 }}
               >
                 <div className="relative">
                   <img
-                    src={relatedProduct.image}
+                    src={relatedProduct.mainImage}
                     alt={relatedProduct.name}
                     className="w-full h-48 object-cover"
                   />
                   {/* Stock Availability Badge */}
                   <div className="absolute top-2 right-2">
                     {relatedProduct.stock > 0 ? (
-                      <span className="bg-[#0b3c5d] text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
+                      <span className="bg-green-600 text-[#f2f2f2] px-3 py-1 rounded-full text-xs">
                         Available
                       </span>
                     ) : (
@@ -419,10 +470,10 @@ export default function ProductPage() {
                     </p>
                     <button
                       onClick={() => router.push(`/shop/${relatedProduct.id}`)}
-                      className="flex items-center gap-2 bg-[#0b3c5d] hover:bg-[#ffcb05] text-[#f2f2f2] hover:text-[#1d2731] py-2 px-4 rounded-lg transition-all"
+                      className="font-bold flex items-center gap-2 bg-[#ffcb05] hover:bg-[#0b3c5d] text-[#0b3c5d] hover:text-[#f2f2f2] py-2 px-4 rounded-lg transition-all"
                       aria-label="View product details"
                     >
-                      <span>View</span>
+                      <span>BUY</span>
                       <FaArrowRight className="text-sm" />
                     </button>
                   </div>

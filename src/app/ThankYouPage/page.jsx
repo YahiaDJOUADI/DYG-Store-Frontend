@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { wilayaCoordinates } from "@/wilayaCoordinates";
-import "leaflet-defaulticon-compatibility";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import api from "@/features/api";
+
+// Dynamically import Leaflet-related code to ensure it only runs in the browser
+const LeafletMap = dynamic(() => import("@/components/LeafletMap"), { ssr: false });
 
 const ThankYouPage = () => {
   const searchParams = useSearchParams();
@@ -39,24 +39,6 @@ const ThankYouPage = () => {
   const wilayaNumber = orderData?.wilaya ? parseInt(orderData.wilaya.split(" - ")[0], 10) : null;
   // Get the selected wilaya coordinates
   const selectedWilaya = wilayaNumber ? wilayaCoordinates[wilayaNumber] : { lat: 36.7525, lng: 3.04197 }; // Default to Algiers if not found
-
-  // Initialize the map
-  useEffect(() => {
-    if (orderData) {
-      const map = L.map("map").setView([selectedWilaya.lat, selectedWilaya.lng], 10);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
-
-      L.marker([selectedWilaya.lat, selectedWilaya.lng])
-        .addTo(map)
-        .bindPopup(`Delivery to ${orderData?.wilaya || "Algiers"}`)
-        .openPopup();
-
-      return () => map.remove();
-    }
-  }, [selectedWilaya, orderData]);
 
   if (loading) {
     return (
@@ -98,10 +80,10 @@ const ThankYouPage = () => {
               <div key={productId.id || index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-4">
                   <img
-                    src={productId.image}
+                    src={productId.mainImage}
                     alt={productId.name}
                     className="w-16 h-16 rounded-lg object-cover"
-                    onError={(e) => console.error(`Failed to load image: ${productId.image}`)}
+                  
                   />
                   <div>
                     <h3 className="text-lg font-semibold">{productId.name}</h3>
@@ -128,7 +110,7 @@ const ThankYouPage = () => {
 
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-[#0b3c5d] mb-4">Delivery Location</h2>
-          <div id="map" style={{ height: "400px", width: "100%", borderRadius: "8px" }} />
+          <LeafletMap selectedWilaya={selectedWilaya} orderData={orderData} />
         </div>
 
         <div className="text-center">
@@ -144,4 +126,10 @@ const ThankYouPage = () => {
   );
 };
 
-export default ThankYouPage;
+const SuspendedThankYouPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ThankYouPage />
+  </Suspense>
+);
+
+export default SuspendedThankYouPage;

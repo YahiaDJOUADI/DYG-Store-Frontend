@@ -422,24 +422,6 @@ export default function SignUp({ openLoginModal }) {
               {loading ? "Signing Up..." : "Sign Up"}
             </motion.button>
           </form>
-
-          {/* Login Link */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="text-center mt-4 sm:mt-6"
-          >
-            <p className="text-sm text-[#1d2731]">
-              Already have an account?{" "}
-              <button
-                onClick={openLoginModal}
-                className="text-[#235789] hover:text-[#ffcb05] transition-all duration-300"
-              >
-                Log in
-              </button>
-            </p>
-          </motion.div>
         </div>
       </motion.div>
     </div>

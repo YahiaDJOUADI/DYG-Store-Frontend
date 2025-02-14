@@ -154,7 +154,7 @@ const MessageManagement = () => {
 
         <DialogContent className="p-6 space-y-6">
           {selectedMessage && (
-            <div className="space-y-4">
+            <div className="space-y-4 py-3">
               <div>
                 <h3 className="text-lg font-semibold text-[#0b3c5d]">Name</h3>
                 <p className="text-gray-700">{selectedMessage.name}</p>

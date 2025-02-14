@@ -19,7 +19,8 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         const response = await api().get("/products");
-        setProducts(response.data);
+        // Adjusted to access the correct property
+        setProducts(response.data.products || []);
       } catch (error) {
         console.error("Error fetching products:", error);
         setError("Failed to fetch products. Please try again later.");
@@ -48,9 +49,9 @@ export default function HomePage() {
   ];
 
   const testimonials = [
-    { name: "Fares Zait", rating: 5, platform: "PS5", hours: "215h", review: "Black Ops 6 has redefined the FPS genre for me. The campaign is intense, and the multiplayer maps are incredibly well-designed. Thanks to <strong style='color:#ffcb05;'>DYG Store</strong>, I got my copy instantly and started playing right away!", avatar: "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif", game: "BlackOps 6", platformImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/PlayStation_logo.svg/1280px-PlayStation_logo.svg.png", gameImg: "/Call_of_Duty_Black_Ops_6_Key_Art.png", tagline: "Fast Delivery, Instant Fun!" },
+    { name: "Fares Zait", rating: 5, platform: "PS5", hours: "215h", review: "Black Ops 6 has redefined the FPS genre for me. The campaign is intense, and the multiplayer maps are incredibly well-designed. Thanks to <strong style='color:#ffcb05;'>DYG Store</strong>, I got my copy instantly and started playing right away!", avatar: "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif", game: "BlackOps 6", platformImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/PlayStation_logo.svg/1280px-PlayStation_logo.svg.png", gameImg: "/Black-Ops-6-review.avif", tagline: "Fast Delivery, Instant Fun!" },
     { name: "Adel Ramdani", rating: 5, platform: "Xbox X", hours: "180h", review: "EA FC 25 is the ultimate football simulation. The graphics are stunning, and the gameplay feels so real. <strong style='color:#ffcb05;'>DYG Store</strong> made the purchase seamless, and I was scoring goals in no time!", avatar: "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif", game: "EAFc25", platformImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/2048px-Xbox_one_logo.svg.png", gameImg: "/fifa.jpg", tagline: "Smooth Purchase, Epic Gameplay!" },
-    { name: "Younes Ait", rating: 4, platform: "Steam", hours: "92h", review: "Forza Horizon 5 is a visual masterpiece. The open-world racing experience is unmatched. Multiplayer could use some tweaks, but overall, it's fantastic. <strong style='color:#ffcb05;'>DYG Store</strong> delivered my game key instantly—no delays!", avatar: "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif", game: "Forza Horizon 5", platformImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/1200px-Steam_icon_logo.svg.png", gameImg: "/images (1).jpg", tagline: "Instant Access, Endless Fun!" },
+    { name: "Younes Ait", rating: 4, platform: "Steam", hours: "92h", review: "Forza Horizon 5 is a visual masterpiece. The open-world racing experience is unmatched. Multiplayer could use some tweaks, but overall, it's fantastic. <strong style='color:#ffcb05;'>DYG Store</strong> delivered my game key instantly—no delays!", avatar: "/cute-diver-playing-vr-game-with-controller-cartoon-vector-icon-illustration-science-technology-flat_138676-13994.avif", game: "Forza Horizon 5", platformImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/1200px-Steam_icon_logo.svg.png", gameImg: "/fifa.jpg", tagline: "Instant Access, Endless Fun!" },
   ];
 
   return (
@@ -76,7 +77,7 @@ export default function HomePage() {
           </motion.p>
           <motion.div className="flex flex-col sm:flex-row gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }}>
             <Link href="/shop">
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="bg-[#ffcb05] text-[#1d2731] px-8 py-3 sm:px-10 sm:py-4 text-lg font-semibold rounded-lg transform transition-all duration-300 hover:bg-[#235789] hover:text-[#f2f2f2]">
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="bg-[#ffcb05] text-[#1d2731] px-8 py-3 sm:px-10 sm:py-4 text-lg font-semibold rounded-lg transform transition-all duration-300 hover:bg-[#0b3c5d] hover:text-white">
                 Pre-Order Now
               </motion.button>
             </Link>
@@ -89,31 +90,61 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Products Section */}
-      <section className="py-14 bg-[#f2f2f2]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.h2 className="text-3xl sm:text-4xl font-bold text-center mb-7 text-[#1d2731]" initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: "easeOut" }}>
-            Featured Products
-          </motion.h2>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.2 } } }}>
-            {products.slice(0, 3).map((product) => (
-              <motion.div key={product.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} variants={{ hidden: { opacity: 0, y: 50 }, visible: { opacity: 1, y: 0 } }}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+     {/* Products Section */}
+<section className="py-14 bg-gradient-to-b from-[#f2f2f2] to-[#e0e0e0] overflow-hidden">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {/* Title with enhanced animation */}
+    <motion.h2
+      className="text-4xl sm:text-5xl font-bold text-center mb-12 text-[#1d2731]"
+      initial={{ opacity: 0, y: -50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -50px 0px" }} // Adjusted margin
+      transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      Top Picks for Gamers
+    </motion.h2>
+
+    {/* Product grid with enhanced animations */}
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "0px 0px -50px 0px" }} // Adjusted margin
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: 0.3, delayChildren: 0.2 },
+        },
+      }}
+    >
+      {products.slice(0, 3).map((product) => (
+        <motion.div
+          key={product.id}
+          whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)" }}
+          whileTap={{ scale: 0.95 }}
+          variants={{
+            hidden: { opacity: 0, y: 50 },
+            visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 15, stiffness: 100 } },
+          }}
+          className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <ProductCard product={product} />
+        </motion.div>
+      ))}
+    </motion.div>
+  </div>
+</section>
 
       {/* Brands Section */}
       <section className="py-14 bg-[#1d2731]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12" initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: "easeOut" }}>
+          <motion.div className="text-center mb-12" initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px 0px -100px 0px" }} transition={{ duration: 0.8, ease: "easeOut" }}>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#f2f2f2] mb-3">
-              Shop the <span className="text-[#ffcb05]">Best</span> in <span className="text-[#ffcb05]">Gaming Gear</span>
+            Your Favorite Brands, All in One Place!
             </h2>
             <p className="text-base sm:text-lg text-[#f2f2f2] opacity-90">
-              From <span className="text-[#ffcb05]">consoles</span> to <span className="text-[#ffcb05]">accessories</span>, we’ve got everything you need to <span className="text-[#ffcb05]">level up</span>.
+            Explore top gaming brands, from powerful consoles to must-have accessories.
             </p>
           </motion.div>
           <div className="relative overflow-hidden">
@@ -137,15 +168,15 @@ export default function HomePage() {
       {/* Enhanced Ratings Section */}
       <section className="relative py-14 bg-[#f2f2f2] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 1 }}>
+          <motion.div className="text-center mb-12" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-100px 0px -100px 0px" }} transition={{ duration: 1 }}>
             <h2 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#235789] to-[#0b3c5d] mb-4">
-              Customer Reviews
+            What Gamers Are Saying
             </h2>
-            <p className="text-xl text-[#1d2731] max-w-2xl mx-auto">Discover what our satisfied gamers have to say about their experiences!</p>
+            <p className="text-xl text-[#1d2731] max-w-2xl mx-auto">Fast delivery, top-quality products, and a gaming experience you can rely on.</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative">
             {testimonials.map((testimonial, index) => (
-              <motion.div key={index} className="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 flex flex-col justify-between transform hover:scale-105" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: index * 0.2 }}>
+              <motion.div key={index} className="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 flex flex-col justify-between transform hover:scale-105" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px 0px -100px 0px" }} transition={{ duration: 0.6, delay: index * 0.2 }}>
                 <div className="absolute top-4 right-4 bg-[#ffcb05] text-white px-3 py-1 rounded-full text-sm font-bold">{testimonial.platform}</div>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative">

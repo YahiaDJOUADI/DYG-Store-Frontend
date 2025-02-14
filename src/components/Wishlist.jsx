@@ -47,9 +47,9 @@ const Wishlist = ({ wishlist, setWishlist }) => {
   };
 
   return (
-    <div className="mt-8">
-      <h3 className="text-2xl font-bold text-[#1d2731] mb-6 flex items-center space-x-3">
-        <FaHeart className="text-[#ffcb05] w-6 h-6" />
+    <div className="min-h-screen mx-auto p-6 bg-white rounded-xl shadow-2xl">
+      <h3 className="text-3xl font-bold text-[#1d2731] mb-6 flex items-center space-x-3">
+        <FaHeart className="text-[#235789] " />
         <span>My Wishlist</span>
       </h3>
 
@@ -63,7 +63,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
             >
               <div className="relative">
                 <img
-                  src={`http://localhost:3001/${item.image}`}
+                  src={`http://localhost:3001/${item.mainImage}`}
                   alt={item.name}
                   className="w-full h-48 object-cover"
                 />

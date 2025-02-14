@@ -104,7 +104,18 @@ const Navbar = () => {
         </Link>
 
         {/* Hamburger Menu Icon (Mobile Only) */}
-        <div className="lg:hidden">
+        <div className="lg:hidden flex items-center gap-4">
+          <Link
+            href="/cart"
+            className="relative text-[#0b3c5d] hover:text-[#ffcb05] transition duration-200"
+          >
+            <FaShoppingCart className="h-5 w-5" />
+            {cartLength > 0 && (
+              <span className="absolute -top-2 -right-2 bg-[#ffcb05] text-white text-xs rounded-full px-2 py-1">
+                {cartLength}
+              </span>
+            )}
+          </Link>
           <button
             onClick={toggleMobileMenu}
             className="text-[#0b3c5d] hover:text-[#ffcb05] focus:outline-none"
@@ -159,6 +170,7 @@ const Navbar = () => {
             openLoginModal={openLoginModal}
             toggleMobileMenu={toggleMobileMenu}
             handleLogout={handleLogout}
+            cartItemCount={cartLength}
           />
         )}
 
@@ -243,7 +255,7 @@ const UserDropdown = ({
             href="/dashboard"
             className="block px-4 py-2 text-sm hover:bg-[#ffcb05] hover:text-white"
           >
-            Admin Dashboard
+            Dashboard
           </Link>
         )}
         <button
@@ -280,14 +292,16 @@ const MobileMenu = ({
   openLoginModal,
   toggleMobileMenu,
   handleLogout,
+  cartItemCount,
 }) => (
   <div
     ref={mobileMenuRef}
-    className="lg:hidden absolute top-16 right-0 bg-white shadow-lg rounded-lg w-48 text-[#1d2731] z-10 p-4"
+    className="lg:hidden absolute top-16 right-0 bg-white shadow-lg rounded-lg w-60 text-[#1d2731] z-10 p-4 space-y-4"
   >
     <NavLink href="/shop" label="Shop" onClick={toggleMobileMenu} />
     <NavLink href="/about" label="About" onClick={toggleMobileMenu} />
     <NavLink href="/contact" label="Contact" onClick={toggleMobileMenu} />
+    <CartLink cartItemCount={cartItemCount} />
     {!isAuthenticated ? (
       <>
         <button
@@ -305,7 +319,7 @@ const MobileMenu = ({
       <>
         <NavLink href="/profile" label="Profile" onClick={toggleMobileMenu} />
         {userType === "admin" && (
-          <NavLink href="/dashboard" label="Admin Dashboard" onClick={toggleMobileMenu} />
+          <NavLink href="/dashboard" label="Dashboard" onClick={toggleMobileMenu} />
         )}
         <button
           onClick={handleLogout}

@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaBox, FaEnvelope, FaShoppingCart, FaUserCog, FaUsers, FaHome, FaArrowUp, FaArrowDown, FaSearch } from "react-icons/fa";
+import { FaBox, FaEnvelope, FaShoppingCart, FaUserCog, FaUsers, FaHome, FaTachometerAlt, FaArrowUp, FaArrowDown, FaSearch } from "react-icons/fa";
 import api from "@/features/api";
 import Link from "next/link";
+import Image from "next/image"; // Import Image component
 
 const AdminLayout = ({ children }) => {
   const [dataCounts, setDataCounts] = useState({
@@ -41,14 +42,15 @@ const AdminLayout = ({ children }) => {
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-center mb-8 h-16 overflow-hidden">
             <div className="relative min-w-[32px]">
-              <div className={`absolute transition-opacity duration-200 ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="w-8 h-8 bg-[#ffcb05] rounded-full flex items-center justify-center">
-                  <span className="text-[#0b3c5d] font-bold">AP</span>
-                </div>
+              <div className="w-8 h-8 bg-[#ffcb05] rounded-full flex items-center justify-center">
+                <Image
+                  src="/cute-angry-diver-gaming-cartoon-vector-icon-illustration-science-technology-icon-isolated-flat_138676-12437.avif" // Replace with the correct path to your profile photo
+                  alt="Profile Photo"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
               </div>
-              <h2 className={`text-xl font-bold text-[#ffcb05] absolute transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-                Admin Portal
-              </h2>
             </div>
           </div>
 
@@ -56,7 +58,13 @@ const AdminLayout = ({ children }) => {
             <Link href="/" className="group flex items-center p-3 rounded-xl hover:bg-[#235789] transition-colors relative">
               <FaHome className="text-[#ffcb05] mr-3 min-w-[20px]" size={20} />
               <span className={`text-[#f2f2f2] text-sm transition-all duration-200 ${isHovered ? 'opacity-100 ml-0' : 'opacity-0 -ml-4'}`}>
-                Back to Home
+                Website Home
+              </span>
+            </Link>
+            <Link href="/dashboard" className="group flex items-center p-3 rounded-xl hover:bg-[#235789] transition-colors relative">
+              <FaTachometerAlt className="text-[#ffcb05] mr-3 min-w-[20px]" size={20} />
+              <span className={`text-[#f2f2f2] text-sm transition-all duration-200 ${isHovered ? 'opacity-100 ml-0' : 'opacity-0 -ml-4'}`}>
+                Dashboard Home
               </span>
             </Link>
 
